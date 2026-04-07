@@ -1,0 +1,99 @@
+---
+name: problem-rationalization
+version: 1.0
+language: match input language
+---
+
+# Problem Rationalization
+
+## Quando usar
+
+Use esta Skill quando o usuário fornecer um texto descrevendo uma tarefa ou problema que deseja resolver com IA — mesmo que o texto esteja desorganizado, informal ou incompleto. Exemplos de gatilhos:
+
+- "preciso que você me ajude a estruturar isso aqui"
+- "tenho uma ideia mas não sei como escrever pro modelo"
+- "transforma isso num prompt melhor"
+- qualquer texto que mencione um problema, um output esperado ou uma validação
+
+> Não usar para: pedidos que já chegam estruturados e prontos para execução — nesses casos, execute diretamente.
+
+## Objetivo
+
+Receber um texto livre descrevendo uma tarefa ou problema, interpretar sua intenção real, e reescrevê-lo em um documento markdown estruturado, claro e otimizado para ser lido e executado por um modelo ou agente de IA — sem perder o contexto e a intenção original do autor.
+
+## Processo
+
+Execute as etapas abaixo em ordem:
+
+1. **Leia o texto completo** sem interromper. Identifique os três elementos-chave mesmo que estejam implícitos: qual é o problema, qual é o output esperado, como validar o resultado.
+2. **Infira o que estiver faltando** com base no contexto disponível. Não pergunte ao usuário antes de tentar — produza sua melhor interpretação e sinalize o que foi inferido.
+3. **Reescreva no formato estruturado** abaixo, usando linguagem direta, sem ambiguidades e otimizada para consumo por IA.
+4. **Solicite feedback** ao final, perguntando se a interpretação está correta e se algum ponto precisa de ajuste.
+
+## Formato de saída
+
+```
+# [Nome da tarefa — inferido do contexto]
+
+## Problem
+Descrição clara e objetiva do problema a ser resolvido.
+Contexto relevante que um modelo precisa saber para executar.
+
+## Expected Output
+O que exatamente deve ser produzido.
+Formato, extensão, estrutura ou restrições do resultado.
+
+## Validation Criteria
+Como saber que o output está correto.
+Critérios objetivos e verificáveis sempre que possível.
+
+## Assumptions
+⚠ [lista do que foi inferido — transparência sobre lacunas preenchidas]
+```
+
+## Restrições
+
+- ✗ Não pedir esclarecimentos antes de tentar — sempre produza uma primeira versão
+- ✗ Não remover informação do texto original, mesmo que pareça redundante
+- ✗ Não adicionar requisitos técnicos que o usuário não mencionou
+- ✗ Não entregar o documento sem a seção Assumptions quando algo foi inferido
+- ✗ Não encerrar sem solicitar feedback explicitamente
+
+## Exemplos
+
+### ✓ Bom — interpreta, estrutura, sinaliza inferências, pede feedback
+
+```markdown
+# Geração de relatório de vendas mensal
+
+## Problem
+O time precisa gerar relatórios mensais de vendas...
+
+## Expected Output
+Arquivo markdown com tabela de vendas por produto...
+
+## Validation Criteria
+- Todos os produtos do mês estão presentes
+- Totais batem com a fonte de dados
+
+## Assumptions
+⚠ Inferido que a fonte de dados é o CRM interno
+⚠ Inferido formato markdown pois não foi especificado
+
+Essa interpretação está correta? Algum ponto precisa de ajuste?
+```
+
+### ✗ Ruim — faz perguntas antes de tentar, não estrutura nada
+
+```
+Para eu poder ajudar, preciso entender melhor: qual é exatamente o problema?
+O que você espera como resultado? Como você vai validar?
+```
+
+---
+
+## Histórico de versões
+
+| Versão | Data | Alteração |
+|--------|------|-----------|
+| 1.0 | 2026-04-06 | Versão inicial |
