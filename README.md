@@ -1,19 +1,40 @@
-# POC — Document Templates (CKEditor 5 vs TinyMCE)
+# POC — Document Templates (Rich Text Editors)
 
-Repositório de POC para validar o uso de rich text editors — **CKEditor 5** e **TinyMCE** — na criação de templates de documentos com cabeçalho, corpo com campos dinâmicos e rodapé.
+Repositório de POC para validar o uso de rich text editors na criação de templates de documentos com cabeçalho, corpo com campos dinâmicos e rodapé.
 
 ## Objetivos
 
 - Criar templates com header, body (campos editáveis/dinâmicos) e footer
 - Preencher campos via placeholder (`{{campo}}`) ou digitação direta
-- Exportar o documento como PDF usando os recursos nativos de cada editor
-- Comparar a experiência de desenvolvimento e uso entre os dois editores
+- Exportar o documento como PDF
+- Comparar a experiência entre editores **premium (GPL 2+)** e **free (MIT/BSD)**
+
+## Iterações
+
+### 1ª Iteração — Premium (Trial)
+
+- **CKEditor 5** (GPL 2+) com Merge Fields + Export to PDF premium
+- **TinyMCE** (GPL 2+) com Merge Tags + Export to PDF premium
+- ⚠️ Ambos licenciados sob **GPL 2+** — incompatível com produtos proprietários sem licença comercial
+
+### 2ª Iteração — MIT/BSD (Free)
+
+- **Tiptap** (MIT, ProseMirror) — headless, 100+ extensions, toolbar customizada
+- **Lexical** (MIT, Meta) — plugin-based, arquitetura moderna, custom toolbar
+- **Quill** (BSD 3-Clause) — popular, toolbar nativa, simples de configurar
+- Campos dinâmicos via placeholders `{{campo}}` + regex replace + painel lateral
+- Export PDF via **html2pdf.js** (MIT, client-side) e **react-to-print** (MIT, browser print)
 
 ## Stack
 
 - **Vite** + **React** + **TypeScript**
-- **CKEditor 5** (Merge Fields + Export to PDF — premium, trial)
-- **TinyMCE** (Merge Tags + Export to PDF — premium, trial)
+- **CKEditor 5** (premium trial — Merge Fields + Export to PDF)
+- **TinyMCE** (premium trial — Merge Tags + Export to PDF)
+- **Tiptap** (MIT — ProseMirror-based, StarterKit + extensions)
+- **Lexical** (MIT — Meta, plugins React)
+- **Quill** (BSD 3-Clause — react-quill-new wrapper)
+- **html2pdf.js** (MIT — HTML → Canvas → PDF client-side)
+- **react-to-print** (MIT — window.print() browser native)
 - **React Router DOM** para navegação entre páginas
 
 ## Setup
@@ -26,17 +47,16 @@ cd POC-doc-templates
 npm install
 ```
 
-### 2. Configurar variáveis de ambiente
+### 2. Configurar variáveis de ambiente (opcional — apenas para editores premium)
 
-Crie um arquivo `.env` na raiz com suas chaves:
+Crie um arquivo `.env` na raiz com suas chaves (necessário apenas para CKEditor/TinyMCE premium):
 
 ```env
 VITE_CK_EDITOR_LICENSE_KEY=sua_license_key_do_ckeditor
 VITE_TINY_CLOUD_API_KEY=sua_api_key_do_tinymce
 ```
 
-- **CKEditor**: Obtenha em [portal.ckeditor.com](https://portal.ckeditor.com/checkout?plan=free) (trial gratuito de 14 dias)
-- **TinyMCE**: Obtenha em [tiny.cloud](https://www.tiny.cloud/auth/signup/) (API key gratuita)
+> **As páginas Tiptap, Lexical e Quill funcionam sem nenhuma variável de ambiente.**
 
 ### 3. Rodar
 
@@ -44,20 +64,42 @@ VITE_TINY_CLOUD_API_KEY=sua_api_key_do_tinymce
 npm run dev
 ```
 
-Acesse `http://localhost:5173` e navegue entre as abas **CKEditor 5** e **TinyMCE**.
+Acesse `http://localhost:5173` — o redirect padrão é para `/tiptap`.
+
+## Rotas disponíveis
+
+| Rota        | Editor                  | Licença        | Tipo       |
+| ----------- | ----------------------- | -------------- | ---------- |
+| `/tiptap`   | Tiptap (ProseMirror)    | MIT            | Free ✅    |
+| `/lexical`  | Lexical (Meta)          | MIT            | Free ✅    |
+| `/quill`    | Quill (react-quill-new) | BSD 3-Clause   | Free ✅    |
+| `/ckeditor` | CKEditor 5              | GPL 2+ (trial) | Premium ⚠️ |
+| `/tinymce`  | TinyMCE                 | GPL 2+ (trial) | Premium ⚠️ |
 
 ## Estrutura do Projeto
 
 ```
 src/
 ├── main.tsx                        # Entrypoint com Router
-├── App.tsx                         # Layout com navegação
+├── App.tsx                         # Layout com navegação (2 seções)
 ├── pages/
-│   ├── CKEditorPage.tsx            # Página CKEditor
-│   └── TinyMCEPage.tsx             # Página TinyMCE
+│   ├── TiptapPage.tsx              # Página Tiptap (MIT)
+│   ├── LexicalPage.tsx             # Página Lexical (MIT)
+│   ├── QuillPage.tsx               # Página Quill (BSD)
+│   ├── CKEditorPage.tsx            # Página CKEditor (premium)
+│   └── TinyMCEPage.tsx             # Página TinyMCE (premium)
 ├── components/
-│   ├── CKEditorTemplate.tsx        # Editor CKEditor configurado
-│   └── TinyMCETemplate.tsx         # Editor TinyMCE configurado
+│   ├── TiptapTemplate.tsx          # Editor Tiptap + toolbar custom
+│   ├── LexicalTemplate.tsx         # Editor Lexical + toolbar custom
+│   ├── QuillTemplate.tsx           # Editor Quill + toolbar nativa
+│   ├── FieldsPanel.tsx             # Painel de campos dinâmicos (compartilhado)
+│   ├── CKEditorTemplate.tsx        # Editor CKEditor (premium)
+│   └── TinyMCETemplate.tsx         # Editor TinyMCE (premium)
+├── utils/
+│   ├── customMergeFields.ts        # Placeholders regex, useFieldValues hook
+│   └── pdfExport.ts                # Wrapper html2pdf.js
+├── types/
+│   └── html2pdf.d.ts               # Type declarations para html2pdf.js
 ├── config/
 │   ├── mergeFieldsConfig.ts        # Campos dinâmicos compartilhados
 │   └── templateConfig.ts           # Template HTML inicial
@@ -79,10 +121,23 @@ src/
 
 ## Documentação
 
-- [`docs/problem-rationalization.md`](docs/problem-rationalization.md) — Definição estruturada do problema e critérios de validação
-- [`docs/solution-planning.md`](docs/solution-planning.md) — Plano de implementação, ADRs e log de implementação
+- [`docs/problem-rationalization.md`](docs/problem-rationalization.md) — Problema (1ª iteração)
+- [`docs/solution-planning-first-iteration.md`](docs/solution-planning-first-iteration.md) — Plano (1ª iteração)
+- [`docs/problem-rationalization-free-tier.md`](docs/problem-rationalization-free-tier.md) — Problema (2ª iteração — licenciamento + alternativas free)
+- [`docs/solution-planning-free-tier.md`](docs/solution-planning-free-tier.md) — Plano (2ª iteração — editores MIT/BSD)
 
 ## Licenciamento
 
-- **CKEditor 5**: Merge Fields e Export to PDF são plugins **premium**. Trial gratuito de 14 dias em [portal.ckeditor.com](https://portal.ckeditor.com/checkout?plan=free).
-- **TinyMCE**: Merge Tags e Export to PDF são plugins **pagos**. API key gratuita em [tiny.cloud](https://www.tiny.cloud/auth/signup/). Export PDF no trial gera PDFs com watermark (sem JWT).
+### Editores MIT/BSD (2ª iteração — sem restrição copyleft)
+
+- **Tiptap**: MIT — sem restrição, uso livre em produtos proprietários
+- **Lexical**: MIT (Meta) — sem restrição, uso livre em produtos proprietários
+- **Quill**: BSD 3-Clause — sem restrição, uso livre em produtos proprietários
+- **html2pdf.js**: MIT — client-side, PDF como imagem rasterizada
+- **react-to-print**: MIT — usa window.print() nativo
+
+### Editores GPL 2+ (1ª iteração — ⚠️ copyleft)
+
+- **CKEditor 5**: GPL 2+ open-source, plugins premium requerem licença comercial
+- **TinyMCE**: GPL 2+ open-source, plugins premium requerem licença comercial
+- ⚠️ **GPL 2+ obriga a abrir o código-fonte** se o software for distribuído — incompatível com produtos proprietários
