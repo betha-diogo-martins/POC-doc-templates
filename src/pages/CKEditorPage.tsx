@@ -9,11 +9,12 @@ export default function CKEditorPage() {
       <div className="page-header">
         <h2>CKEditor 5</h2>
         <p className="page-description">
-          Editor com <strong>Merge Fields</strong> (campos dinâmicos) e{" "}
-          <strong>Export to PDF</strong>. Use o botão{" "}
-          <em>Insert Merge Field</em> na toolbar ou digite <code>{"{{"}</code>{" "}
-          para inserir campos. Alterne entre visualização de labels e preview de
-          dados.
+          Editor com <strong>Merge Fields</strong> (campos dinâmicos),{" "}
+          <strong>Export to PDF</strong>, <strong>Page Break</strong> e{" "}
+          <strong>Pagination</strong>. Use o botão <em>Page Break</em> na
+          toolbar para inserir quebras de página. A paginação mostra onde cada
+          página termina no formato A4. Use <em>Export PDF</em> para validar as
+          quebras no documento final.
         </p>
       </div>
       <CKEditorTemplate />

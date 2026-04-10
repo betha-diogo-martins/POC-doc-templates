@@ -26,6 +26,8 @@ export default function TinyMCETemplate() {
         init={{
           height: 700,
           menubar: "file edit view insert format tools table help",
+          browser_spellcheck: true,
+          language: 'pt_BR',
           plugins: [
             "advlist",
             "autolink",
@@ -73,6 +75,11 @@ export default function TinyMCETemplate() {
               padding: 16px;
             }
           `,
+        setup: (editor) => {
+          editor.on('init', () => {
+            editor.getBody().setAttribute('lang', 'pt-BR'); // 🔥 ESSENCIAL
+          });
+        },
           pagebreak_separator: '<div style="break-after: page"></div>',
           pagebreak_split_block: true,
         }}

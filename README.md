@@ -25,6 +25,24 @@ Repositório de POC para validar o uso de rich text editors na criação de temp
 - Campos dinâmicos via placeholders `{{campo}}` + regex replace + painel lateral
 - Export PDF via **html2pdf.js** (MIT, client-side) e **react-to-print** (MIT, browser print)
 
+### 3ª Iteração — Extensibilidade (Formatação, Preview, Spellcheck)
+
+Validação prática de extensibilidade nos 3 editores free, implementando:
+
+- **Formatação avançada** — indentação (indent/outdent), line-height (1.0, 1.15, 1.5, 2.0), espaçamento entre parágrafos (margin-top/bottom)
+- **Preview PDF** — modal A4 (210mm × 297mm) com campos aplicados, exportação direta do preview
+- **Corretor ortográfico** — `spellcheck="true"` + `lang="pt-BR"` (nativo do browser)
+
+#### Abordagem por editor
+
+| Feature          | Tiptap                                  | Lexical                             | Quill                             |
+| ---------------- | --------------------------------------- | ----------------------------------- | --------------------------------- |
+| Indentação       | Custom extension (`IndentExtension`)    | Nativo (`INDENT_CONTENT_COMMAND`)   | Nativo (`indent` format)          |
+| Line-height      | Custom extension (`LineHeightExtension`)| DOM style via `applyBlockStyle()`   | Parchment `StyleAttributor`       |
+| Spacing          | Custom extension (`ParagraphSpacing`)   | DOM style via `applyBlockStyle()`   | Parchment `StyleAttributor`       |
+| Preview PDF      | Compartilhado (`PdfPreview.tsx`)        | Compartilhado (`PdfPreview.tsx`)    | Compartilhado (`PdfPreview.tsx`)  |
+| Spellcheck       | `editorProps.attributes`                | `ContentEditable` props             | Container `lang` attribute        |
+
 ## Stack
 
 - **Vite** + **React** + **TypeScript**
@@ -89,12 +107,26 @@ src/
 │   ├── CKEditorPage.tsx            # Página CKEditor (premium)
 │   └── TinyMCEPage.tsx             # Página TinyMCE (premium)
 ├── components/
-│   ├── TiptapTemplate.tsx          # Editor Tiptap + toolbar custom
-│   ├── LexicalTemplate.tsx         # Editor Lexical + toolbar custom
-│   ├── QuillTemplate.tsx           # Editor Quill + toolbar nativa
-│   ├── FieldsPanel.tsx             # Painel de campos dinâmicos (compartilhado)
+│   ├── TiptapTemplate.tsx          # Editor Tiptap + toolbar custom + formatting
+│   ├── LexicalTemplate.tsx         # Editor Lexical + toolbar custom + formatting
+│   ├── QuillTemplate.tsx           # Editor Quill + toolbar nativa + formatting
+│   ├── FieldsPanel.tsx             # Painel de campos dinâmicos + preview (compartilhado)
+│   ├── PdfPreview.tsx              # Modal de preview A4 do documento (compartilhado)
+│   ├── SpacingControls.tsx         # Controles de line-height e spacing com presets + input livre (compartilhado)
 │   ├── CKEditorTemplate.tsx        # Editor CKEditor (premium)
 │   └── TinyMCETemplate.tsx         # Editor TinyMCE (premium)
+├── extensions/
+│   ├── tiptap/
+│   │   ├── IndentExtension.ts      # Indentação por níveis (0-5, 2em/nível)
+│   │   ├── LineHeightExtension.ts  # Line-height (1, 1.15, 1.5, 2)
+│   │   └── ParagraphSpacingExtension.ts # Margin-top/bottom entre parágrafos
+│   ├── lexical/
+│   │   ├── index.ts                # Barrel export
+│   │   └── applyBlockStyle.ts      # CSS inline em blocos selecionados
+│   └── quill/
+│       ├── index.ts                # Barrel export
+│       ├── registerFormattingAttributors.ts # Parchment StyleAttributors
+│       └── quillFormattingConfig.ts # QUILL_MODULES e QUILL_FORMATS
 ├── utils/
 │   ├── customMergeFields.ts        # Placeholders regex, useFieldValues hook
 │   └── pdfExport.ts                # Wrapper html2pdf.js
@@ -125,6 +157,8 @@ src/
 - [`docs/solution-planning-first-iteration.md`](docs/solution-planning-first-iteration.md) — Plano (1ª iteração)
 - [`docs/problem-rationalization-free-tier.md`](docs/problem-rationalization-free-tier.md) — Problema (2ª iteração — licenciamento + alternativas free)
 - [`docs/solution-planning-free-tier.md`](docs/solution-planning-free-tier.md) — Plano (2ª iteração — editores MIT/BSD)
+- [`docs/problem-rationalization-extensibility.md`](docs/problem-rationalization-extensibility.md) — Problema (3ª iteração — extensibilidade)
+- [`docs/solution-planning-extensibility.md`](docs/solution-planning-extensibility.md) — Plano (3ª iteração — formatação, preview, spellcheck)
 
 ## Licenciamento
 

@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
-  ClassicEditor,
   Essentials,
   Bold,
   Italic,
@@ -26,8 +25,10 @@ import {
   ImageResizeHandles,
   ImageResizeEditing,
   Image,
+  DecoupledEditor,
+  PageBreak,
 } from "ckeditor5";
-import { MergeFields, ExportPdf } from "ckeditor5-premium-features";
+import { MergeFields, ExportPdf, Pagination } from "ckeditor5-premium-features";
 
 import "ckeditor5/ckeditor5.css";
 import "ckeditor5-premium-features/ckeditor5-premium-features.css";
@@ -41,10 +42,12 @@ import { DOCUMENT_TEMPLATE } from "../config/templateConfig";
 const LICENSE_KEY = import.meta.env.VITE_CK_EDITOR_LICENSE_KEY || "";
 
 /**
- * CKEditor 5 template editor component with merge fields and PDF export.
+ * CKEditor 5 template editor component with merge fields, PDF export,
+ * page break and pagination support (DecoupledEditor with manual toolbar mount).
  */
 export default function CKEditorTemplate() {
-  const editorRef = useRef<ClassicEditor | null>(null);
+  const editorRef = useRef<DecoupledEditor | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
   const mergeFieldsDefinitions = getCKEditorMergeFieldsConfig();
   const dataSets = [
@@ -59,11 +62,15 @@ export default function CKEditorTemplate() {
 
   return (
     <div className="editor-wrapper">
-      <CKEditor
-        editor={ClassicEditor}
+      <div ref={toolbarRef} className="ck-toolbar-container" />
+      <div className="ck-editor-body">
+          <CKEditor
+        editor={DecoupledEditor}
         config={{
           licenseKey: LICENSE_KEY,
           plugins: [
+            Pagination,
+            PageBreak,
             Image,
             ImageResizeEditing,
             ImageResizeHandles,
@@ -116,6 +123,11 @@ export default function CKEditorTemplate() {
               "link",
               "insertTable",
               "blockQuote",
+              "pageBreak",
+              "|",
+              "previousPage",
+              "nextPage",
+              "pageNavigation",
               "|",
               "insertMergeField",
               "previewMergeFields",
@@ -155,12 +167,36 @@ export default function CKEditorTemplate() {
               },
             },
           },
+          pagination: {
+            pageWidth: "21cm",
+            pageHeight: "29.7cm",
+            pageMargins: {
+              top: "20mm",
+              bottom: "20mm",
+              right: "15mm",
+              left: "15mm",
+            },
+          },
           initialData: DOCUMENT_TEMPLATE,
         }}
         onReady={(editor) => {
           editorRef.current = editor;
+          // DecoupledEditor requires manual toolbar mounting
+          const toolbarElement = editor.ui.view.toolbar.element;
+          if (toolbarElement && toolbarRef.current) {
+            toolbarRef.current.appendChild(toolbarElement);
+          }
+        }}
+        onAfterDestroy={() => {
+          // Clean up toolbar container on destroy/re-init
+          if (toolbarRef.current) {
+            Array.from(toolbarRef.current.children).forEach((child) =>
+              child.remove(),
+            );
+          }
         }}
       />
+      </div>
     </div>
   );
 }
