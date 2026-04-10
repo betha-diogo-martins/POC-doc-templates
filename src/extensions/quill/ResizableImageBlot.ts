@@ -11,7 +11,9 @@
 
 import { Quill } from "react-quill-new";
 
-const BaseImage = Quill.import("formats/image") as typeof import("parchment").EmbedBlot;
+const BaseImage = Quill.import(
+  "formats/image",
+) as typeof import("parchment").EmbedBlot;
 
 export interface ResizableImageValue {
   src: string;

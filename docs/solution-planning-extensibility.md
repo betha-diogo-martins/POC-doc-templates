@@ -289,11 +289,11 @@ src/extensions/
 
 ### O que foi extraído
 
-| Editor  | O que estava inline                         | Novo arquivo                              |
-| ------- | ------------------------------------------- | ----------------------------------------- |
-| Lexical | `applyBlockStyle()` dentro do `ToolbarPlugin` | `extensions/lexical/applyBlockStyle.ts`  |
+| Editor  | O que estava inline                                | Novo arquivo                                        |
+| ------- | -------------------------------------------------- | --------------------------------------------------- |
+| Lexical | `applyBlockStyle()` dentro do `ToolbarPlugin`      | `extensions/lexical/applyBlockStyle.ts`             |
 | Quill   | Parchment Attributor registrations (3 attributors) | `extensions/quill/registerFormattingAttributors.ts` |
-| Quill   | `QUILL_MODULES` e `QUILL_FORMATS` constantes | `extensions/quill/quillFormattingConfig.ts` |
+| Quill   | `QUILL_MODULES` e `QUILL_FORMATS` constantes       | `extensions/quill/quillFormattingConfig.ts`         |
 
 ### Mudanças nos componentes
 
@@ -316,6 +316,7 @@ src/extensions/
 #### SpacingControls — Componente compartilhado
 
 Criado `src/components/SpacingControls.tsx`:
+
 - Recebe callbacks `onLineHeight(value)` e `onSpacing(value)` — agnóstico ao editor
 - Exibe **preset buttons** para valores comuns (clique rápido)
 - Inclui **campo de input livre** onde o usuário digita qualquer valor CSS (ex: `2.33cm`, `18pt`, `1.8`)
@@ -329,31 +330,31 @@ Criado `src/components/SpacingControls.tsx`:
 
 #### Integração nos 3 editores
 
-| Editor  | Integração                                                                                 |
-| ------- | ------------------------------------------------------------------------------------------ |
+| Editor  | Integração                                                                                                                                         |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Tiptap  | `SpacingControls` renderizado entre toolbar e `EditorContent`. Chama `setLineHeight()` e `setSpacingBefore()/setSpacingAfter()` via chain commands |
-| Lexical | `SpacingPlugin` wrapper (dentro do `LexicalComposer`) renderiza `SpacingControls`. Chama `applyBlockStyle(editor, ...)` |
-| Quill   | `SpacingControls` renderizado acima do `ReactQuill`. Chama `editor.formatLine()` com os attributors registrados |
+| Lexical | `SpacingPlugin` wrapper (dentro do `LexicalComposer`) renderiza `SpacingControls`. Chama `applyBlockStyle(editor, ...)`                            |
+| Quill   | `SpacingControls` renderizado acima do `ReactQuill`. Chama `editor.formatLine()` com os attributors registrados                                    |
 
 ### Arquivos modificados
 
-| Arquivo | Mudança |
-| ------- | ------- |
-| `src/components/SpacingControls.tsx` | **Novo** — componente compartilhado com presets + custom input |
-| `src/extensions/quill/registerFormattingAttributors.ts` | Removidas `whitelist` dos 3 attributors (aceita qualquer valor) |
-| `src/extensions/quill/quillFormattingConfig.ts` | Removido `lineHeight` da toolbar nativa |
-| `src/components/TiptapTemplate.tsx` | Substituídos `<select>` inline por `<SpacingControls>` |
-| `src/components/LexicalTemplate.tsx` | Substituídos `<select>` inline por `<SpacingPlugin>` + `<SpacingControls>` |
-| `src/components/QuillTemplate.tsx` | Removido extra-toolbar inline, usa `<SpacingControls>` |
-| `src/index.css` | Adicionados estilos para `.spacing-controls`, `.spacing-presets`, `.spacing-preset-btn`, `.spacing-custom-input`, `.spacing-input`, `.spacing-apply-btn` |
+| Arquivo                                                 | Mudança                                                                                                                                                  |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/SpacingControls.tsx`                    | **Novo** — componente compartilhado com presets + custom input                                                                                           |
+| `src/extensions/quill/registerFormattingAttributors.ts` | Removidas `whitelist` dos 3 attributors (aceita qualquer valor)                                                                                          |
+| `src/extensions/quill/quillFormattingConfig.ts`         | Removido `lineHeight` da toolbar nativa                                                                                                                  |
+| `src/components/TiptapTemplate.tsx`                     | Substituídos `<select>` inline por `<SpacingControls>`                                                                                                   |
+| `src/components/LexicalTemplate.tsx`                    | Substituídos `<select>` inline por `<SpacingPlugin>` + `<SpacingControls>`                                                                               |
+| `src/components/QuillTemplate.tsx`                      | Removido extra-toolbar inline, usa `<SpacingControls>`                                                                                                   |
+| `src/index.css`                                         | Adicionados estilos para `.spacing-controls`, `.spacing-presets`, `.spacing-preset-btn`, `.spacing-custom-input`, `.spacing-input`, `.spacing-apply-btn` |
 
 ---
 
 ## Histórico de versões
 
-| Versão | Data       | Autor    | Alteração                            |
-| ------ | ---------- | -------- | ------------------------------------ |
-| 1.0    | 2026-04-08 | AI Agent | Documento criado (AWAITING APPROVAL) |
-| 1.1    | 2026-04-09 | AI Agent | Implementação completa — status DONE |
-| 1.2    | 2026-04-09 | AI Agent | Refactor — extensões extraídas para arquivos separados |
+| Versão | Data       | Autor    | Alteração                                                                     |
+| ------ | ---------- | -------- | ----------------------------------------------------------------------------- |
+| 1.0    | 2026-04-08 | AI Agent | Documento criado (AWAITING APPROVAL)                                          |
+| 1.1    | 2026-04-09 | AI Agent | Implementação completa — status DONE                                          |
+| 1.2    | 2026-04-09 | AI Agent | Refactor — extensões extraídas para arquivos separados                        |
 | 1.3    | 2026-04-09 | AI Agent | Refactor — SpacingControls compartilhado + valores personalizados + fix Quill |

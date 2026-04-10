@@ -798,8 +798,12 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .pdf-preview-modal {
@@ -816,8 +820,14 @@ body {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .pdf-preview-header {
@@ -867,8 +877,14 @@ body {
   padding: 20mm 18mm;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
   border-radius: 2px;
-  overflow-x: hidden;          /* prevent horizontal overflow from page-break bleed */
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden; /* prevent horizontal overflow from page-break bleed */
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   color: var(--text);
   line-height: 1.6;
   font-size: 14px;
@@ -897,7 +913,7 @@ body {
    (dashed line + centred label) but disable the CSS break-after since we're
    rendering everything in a single scrollable container. */
 .pdf-preview-page .page-break {
-  break-after: auto;               /* no CSS page-break on screen */
+  break-after: auto; /* no CSS page-break on screen */
 }
 
 .pdf-preview-page blockquote {
@@ -1146,4 +1162,3 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-

@@ -37,10 +37,7 @@ export const PageBreak = Node.create<PageBreakOptions>({
   },
 
   parseHTML() {
-    return [
-      { tag: 'div[data-type="page-break"]' },
-      { tag: "hr.page-break" },
-    ];
+    return [{ tag: 'div[data-type="page-break"]' }, { tag: "hr.page-break" }];
   },
 
   renderHTML({ HTMLAttributes }) {

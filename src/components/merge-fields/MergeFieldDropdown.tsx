@@ -5,9 +5,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import {
-  type MergeFieldDefinition,
-} from "../../config/mergeFieldsConfig";
+import { type MergeFieldDefinition } from "../../config/mergeFieldsConfig";
 import { getFieldsByGroup } from "../../utils/customMergeFields";
 
 export interface MergeFieldDropdownProps {

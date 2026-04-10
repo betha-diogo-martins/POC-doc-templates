@@ -331,20 +331,24 @@ function CustomNodesPlugin() {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    const unregisterMergeField = editor.registerCommand<InsertMergeFieldPayload>(
-      INSERT_MERGE_FIELD_COMMAND,
-      (payload) => {
-        editor.update(() => {
-          const selection = $getSelection();
-          if ($isRangeSelection(selection)) {
-            const node = $createMergeFieldNode(payload.fieldId, payload.label);
-            selection.insertNodes([node]);
-          }
-        });
-        return true;
-      },
-      COMMAND_PRIORITY_EDITOR,
-    );
+    const unregisterMergeField =
+      editor.registerCommand<InsertMergeFieldPayload>(
+        INSERT_MERGE_FIELD_COMMAND,
+        (payload) => {
+          editor.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+              const node = $createMergeFieldNode(
+                payload.fieldId,
+                payload.label,
+              );
+              selection.insertNodes([node]);
+            }
+          });
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR,
+      );
 
     const unregisterPageBreak = editor.registerCommand(
       INSERT_PAGE_BREAK_COMMAND,

@@ -327,11 +327,7 @@ export default function TiptapTemplate() {
             <div className="toolbar-group">
               <MergeFieldDropdown
                 onSelect={(fieldId, label) =>
-                  editor
-                    .chain()
-                    .focus()
-                    .insertMergeField(fieldId, label)
-                    .run()
+                  editor.chain().focus().insertMergeField(fieldId, label).run()
                 }
               />
             </div>
@@ -340,17 +336,12 @@ export default function TiptapTemplate() {
 
             <div className="toolbar-group">
               <ToolbarButton
-                onClick={() =>
-                  editor.chain().focus().insertPageBreak().run()
-                }
+                onClick={() => editor.chain().focus().insertPageBreak().run()}
                 title="Inserir quebra de página"
               >
                 📄 Page Break
               </ToolbarButton>
-              <ToolbarButton
-                onClick={handleImageUpload}
-                title="Inserir imagem"
-              >
+              <ToolbarButton onClick={handleImageUpload} title="Inserir imagem">
                 🖼️ Imagem
               </ToolbarButton>
             </div>

@@ -14,25 +14,25 @@ A análise da **feature matrix** (`problem-rationalization-feature-matrix.md`) m
 
 No entanto, resta um conjunto de **3 features fundamentais ainda não implementadas** nos editores free que precisa ser validado para provar a viabilidade técnica:
 
-| # | Feature pendente | Motivo de ser prioritária |
-|---|-----------------|--------------------------|
-| 1 | **Merge Fields visuais** | Core do produto — templates de documentos dependem de campos dinâmicos como `{{nome}}`, `{{cpf}}` renderizados como badges atômicos no editor |
-| 2 | **Page Break** | Essencial para documentos oficiais multi-página — o usuário precisa controlar onde as páginas quebram |
-| 3 | **Inserção de imagens** | Requisito básico de qualquer editor de documentos — upload, exibição e resize de imagens |
+| #   | Feature pendente         | Motivo de ser prioritária                                                                                                                     |
+| --- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Merge Fields visuais** | Core do produto — templates de documentos dependem de campos dinâmicos como `{{nome}}`, `{{cpf}}` renderizados como badges atômicos no editor |
+| 2   | **Page Break**           | Essencial para documentos oficiais multi-página — o usuário precisa controlar onde as páginas quebram                                         |
+| 3   | **Inserção de imagens**  | Requisito básico de qualquer editor de documentos — upload, exibição e resize de imagens                                                      |
 
 **Objetivo desta iteração**: Implementar essas 3 features nos 3 editores free (Tiptap, Lexical, Quill) e validar que é possível construir um editor de templates funcional com ferramentas open source.
 
 ### Estado atual da POC (features já validadas ✅)
 
-| Feature | Tiptap | Lexical | Quill |
-|---------|--------|---------|-------|
-| Formatação ABNT | ✅ | ✅ | ✅ |
-| Preview PDF (modal A4) | ✅ | ✅ | ✅ |
-| Export PDF (html2pdf.js) | ✅ | ✅ | ✅ |
-| Spell check (browser) | ✅ | ✅ | ✅ |
-| **Merge Fields visuais** | ✅ | ✅ | ✅ |
-| **Page Break** | ✅ | ✅ | ✅ |
-| **Inserção de imagens** | ✅ | ✅ | ✅ |
+| Feature                  | Tiptap | Lexical | Quill |
+| ------------------------ | ------ | ------- | ----- |
+| Formatação ABNT          | ✅     | ✅      | ✅    |
+| Preview PDF (modal A4)   | ✅     | ✅      | ✅    |
+| Export PDF (html2pdf.js) | ✅     | ✅      | ✅    |
+| Spell check (browser)    | ✅     | ✅      | ✅    |
+| **Merge Fields visuais** | ✅     | ✅      | ✅    |
+| **Page Break**           | ✅     | ✅      | ✅    |
+| **Inserção de imagens**  | ✅     | ✅      | ✅    |
 
 ---
 
@@ -87,6 +87,7 @@ Adicionar na toolbar de cada editor um **dropdown "Inserir Campo"** que lista os
 #### Compatibilidade com FieldsPanel
 
 O FieldsPanel continuará funcionando para **substituir os valores** — quando o usuário clica "Aplicar valores", o sistema:
+
 1. Serializa o HTML do editor (`getHTML()`)
 2. Busca os badges (`data-field-id`) no HTML
 3. Substitui os badges pelos valores reais (texto puro)
@@ -224,6 +225,7 @@ Atualizar `src/index.css` com estilos para:
 #### Step 2 — Componente MergeFieldDropdown (compartilhado)
 
 Criar `src/components/merge-fields/MergeFieldDropdown.tsx`:
+
 - Props: `onSelect(fieldId: string, label: string)` — callback quando um campo é selecionado
 - Renderiza botão "📎 Inserir Campo" que abre dropdown com campos de `MERGE_FIELDS` agrupados por grupo
 - Reutilizável entre os 3 editores (cada um passa seu callback de inserção)
@@ -236,6 +238,7 @@ Criar 2 arquivos:
 2. `src/components/merge-fields/TiptapMergeFieldView.tsx` — Componente React para `ReactNodeViewRenderer`, renderiza badge com `<NodeViewWrapper>`
 
 Atualizar `src/components/TiptapTemplate.tsx`:
+
 - Importar e registrar extensão `MergeField` no `useEditor`
 - Adicionar `MergeFieldDropdown` na toolbar que chama `editor.chain().focus().insertMergeField(fieldId, label).run()`
 
@@ -247,17 +250,20 @@ Criar 2 arquivos:
 2. `src/components/page-break/TiptapPageBreakView.tsx` — Componente React para `ReactNodeViewRenderer`, renderiza visual de separador de página
 
 Atualizar `src/components/TiptapTemplate.tsx`:
+
 - Registrar extensão `PageBreak` no `useEditor`
 - Adicionar botão "⬛ Quebra de Página" na toolbar
 
 #### Step 5 — Imagens: Tiptap (ResizableImage com aspect ratio lock)
 
 Criar `src/extensions/tiptap/ResizableImageExtension.ts`:
+
 - Estende `@tiptap/extension-image` com `Image.extend()`
 - Adiciona atributos `width` e `height` persistidos (parseHTML/renderHTML)
 - Usa `ReactNodeViewRenderer(TiptapResizableImageView)` para renderizar
 
 Criar `src/components/image/TiptapResizableImageView.tsx`:
+
 - Container com `<img>` + handle de resize no canto inferior-direito
 - Drag resize via `mousedown` → `mousemove` → `mouseup`
 - **Aspect ratio lock**: `newHeight = newWidth / aspectRatio` automático
@@ -265,6 +271,7 @@ Criar `src/components/image/TiptapResizableImageView.tsx`:
 - Persiste `width`/`height` no ProseMirror via `updateAttributes()`
 
 Atualizar `src/components/TiptapTemplate.tsx`:
+
 - Substituir `Image` por `ResizableImage`
 - Manter `handleImageUpload()` + file input existentes
 - Botão "🖼️ Imagem" na toolbar
@@ -272,6 +279,7 @@ Atualizar `src/components/TiptapTemplate.tsx`:
 #### Step 6 — Atualizar FieldsPanel + templateConfig (compartilhado)
 
 Atualizar `src/components/FieldsPanel.tsx`:
+
 - A lógica de "Aplicar valores" precisa ser atualizada para lidar com ambos os formatos:
   - Placeholders texto puro `{{campo}}` (legado)
   - Badges HTML `<span data-type="merge-field" data-field-id="campo">...</span>`
@@ -279,6 +287,7 @@ Atualizar `src/components/FieldsPanel.tsx`:
 - "Resetar" deve restaurar os badges no template original
 
 Atualizar `src/config/templateConfig.ts`:
+
 - Converter os `{{campo}}` do `DOCUMENT_TEMPLATE` para o formato de badge HTML: `<span data-type="merge-field" data-field-id="campo" class="merge-field-badge">{{campo}}</span>`
 - Isso garante que ao carregar o template nos editores free, os badges são renderizados como nodes visuais
 
@@ -298,6 +307,7 @@ Criar 2 arquivos:
 Atualizar `src/extensions/lexical/index.ts` — Barrel export do `MergeFieldNode`
 
 Atualizar `src/components/LexicalTemplate.tsx`:
+
 - Registrar `MergeFieldNode` no `initialConfig.nodes`
 - Criar `INSERT_MERGE_FIELD_COMMAND` e listener no `ToolbarPlugin`
 - Reutilizar `MergeFieldDropdown` na toolbar
@@ -312,6 +322,7 @@ Criar 2 arquivos:
 Atualizar `src/extensions/lexical/index.ts` — Barrel export do `PageBreakNode`
 
 Atualizar `src/components/LexicalTemplate.tsx`:
+
 - Registrar `PageBreakNode` no `initialConfig.nodes`
 - Criar `INSERT_PAGE_BREAK_COMMAND` e botão na toolbar
 
@@ -325,6 +336,7 @@ Criar 2 arquivos:
 Atualizar `src/extensions/lexical/index.ts` — Barrel export do `ImageNode`
 
 Atualizar `src/components/LexicalTemplate.tsx`:
+
 - Registrar `ImageNode` no `initialConfig.nodes`
 - Criar `INSERT_IMAGE_COMMAND` e botão na toolbar com file input
 
@@ -345,6 +357,7 @@ Atualizar `src/extensions/quill/quillFormattingConfig.ts` — Adicionar `'merge-
 Atualizar `src/extensions/quill/index.ts` — Exportar o novo Blot
 
 Atualizar `src/components/QuillTemplate.tsx`:
+
 - Reutilizar `MergeFieldDropdown` acima do editor
 - Handler que chama `editor.insertEmbed(index, 'merge-field', { fieldId, label })`
 
@@ -358,12 +371,14 @@ Atualizar `src/extensions/quill/registerFormattingAttributors.ts` — Registrar 
 Atualizar `src/extensions/quill/quillFormattingConfig.ts` — Adicionar `'page-break'` aos `QUILL_FORMATS`
 
 Atualizar `src/components/QuillTemplate.tsx`:
+
 - Adicionar botão "Quebra de Página" na UI
 - Handler que chama `editor.insertEmbed(index, 'page-break', true, 'user')`
 
 #### Step 12 — Imagens: Quill (sobrescrever handler)
 
 Atualizar `src/components/QuillTemplate.tsx`:
+
 - Sobrescrever o handler de imagem nativo do Quill para usar file upload em vez de prompt URL:
   ```
   const toolbar = quill.getModule('toolbar');
@@ -381,6 +396,7 @@ Atualizar `src/components/QuillTemplate.tsx`:
 #### Step 13 — Atualizar Preview PDF para respeitar Page Breaks
 
 Atualizar `src/components/PdfPreview.tsx`:
+
 - Garantir que o CSS do preview modal respeita `.page-break { break-after: page }` visualmente
 - Opcionalmente: renderizar os page breaks como separadores visuais entre "páginas" distintas no preview (cada "página" como um bloco A4 separado)
 
@@ -447,30 +463,30 @@ src/index.css                          # + estilos merge-field-badge, page-break
 
 ## 6. Architectural Decision Records (ADR)
 
-| # | Decisão | Justificativa |
-|---|---------|---------------|
-| 1 | **Merge Fields como nodes atômicos (não texto puro)** | Evita edição parcial dos placeholders, garante integridade do campo, melhor UX com visual de badge. A serialização HTML mantém compatibilidade com o FieldsPanel existente. |
-| 2 | **Tiptap: `ReactNodeViewRenderer` para merge fields e page break** | Permite renderizar componentes React dentro do editor ProseMirror. É a abordagem oficial e mais flexível para custom UI. |
-| 3 | **Lexical: `DecoratorNode` para todos os custom nodes** | É o tipo de node do Lexical projetado para renderizar React components. `ElementNode` é para containers de texto; `DecoratorNode` é para conteúdo não-editável/custom. |
-| 4 | **Quill: Inline Embed para merge fields, BlockEmbed para page break** | Merge fields são inline (dentro do texto), page break é um bloco que ocupa a largura total. O Parchment distingue claramente esses dois tipos de blot. |
-| 5 | **Imagens via base64 Data URL** | Simplifica a POC eliminando a necessidade de um servidor de upload. O html2pdf.js renderiza base64 corretamente. Em produção, seria substituído por upload para CDN. |
-| 6 | **Dropdown de merge fields como componente React externo** | A toolbar nativa do Quill não suporta dropdowns customizados facilmente. Um componente React compartilhado garante UX consistente entre os 3 editores. |
-| 7 | **`break-after: page` para page breaks no PDF** | É a propriedade CSS padrão que o html2pdf.js (via html2canvas + jsPDF) respeita para paginação. `page-break-after: always` é o legado equivalente. |
-| 8 | **Template com badges HTML (não texto puro)** | Ao carregar o template, os editores com parseHTML reconhecem os badges e convertem para seus custom nodes. Editores que não reconhecem simplesmente mostram o `<span>` com o texto `{{campo}}`. |
-| 9 | **MergeFieldDropdown compartilhado entre editores** | Mesmo padrão do `SpacingControls` — componente agnóstico ao editor que recebe um callback de inserção. Reutilizável e testável. |
-| 10 | **Lexical ImageNode simplificado (não playground completo)** | O ImageNode do playground Lexical é complexo (~300 LOC) com inline images, captions, collab. Para a POC, um DecoratorNode simples com `<img>` + resize CSS é suficiente. |
+| #   | Decisão                                                               | Justificativa                                                                                                                                                                                   |
+| --- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Merge Fields como nodes atômicos (não texto puro)**                 | Evita edição parcial dos placeholders, garante integridade do campo, melhor UX com visual de badge. A serialização HTML mantém compatibilidade com o FieldsPanel existente.                     |
+| 2   | **Tiptap: `ReactNodeViewRenderer` para merge fields e page break**    | Permite renderizar componentes React dentro do editor ProseMirror. É a abordagem oficial e mais flexível para custom UI.                                                                        |
+| 3   | **Lexical: `DecoratorNode` para todos os custom nodes**               | É o tipo de node do Lexical projetado para renderizar React components. `ElementNode` é para containers de texto; `DecoratorNode` é para conteúdo não-editável/custom.                          |
+| 4   | **Quill: Inline Embed para merge fields, BlockEmbed para page break** | Merge fields são inline (dentro do texto), page break é um bloco que ocupa a largura total. O Parchment distingue claramente esses dois tipos de blot.                                          |
+| 5   | **Imagens via base64 Data URL**                                       | Simplifica a POC eliminando a necessidade de um servidor de upload. O html2pdf.js renderiza base64 corretamente. Em produção, seria substituído por upload para CDN.                            |
+| 6   | **Dropdown de merge fields como componente React externo**            | A toolbar nativa do Quill não suporta dropdowns customizados facilmente. Um componente React compartilhado garante UX consistente entre os 3 editores.                                          |
+| 7   | **`break-after: page` para page breaks no PDF**                       | É a propriedade CSS padrão que o html2pdf.js (via html2canvas + jsPDF) respeita para paginação. `page-break-after: always` é o legado equivalente.                                              |
+| 8   | **Template com badges HTML (não texto puro)**                         | Ao carregar o template, os editores com parseHTML reconhecem os badges e convertem para seus custom nodes. Editores que não reconhecem simplesmente mostram o `<span>` com o texto `{{campo}}`. |
+| 9   | **MergeFieldDropdown compartilhado entre editores**                   | Mesmo padrão do `SpacingControls` — componente agnóstico ao editor que recebe um callback de inserção. Reutilizável e testável.                                                                 |
+| 10  | **Lexical ImageNode simplificado (não playground completo)**          | O ImageNode do playground Lexical é complexo (~300 LOC) com inline images, captions, collab. Para a POC, um DecoratorNode simples com `<img>` + resize CSS é suficiente.                        |
 
 ---
 
 ## 7. Riscos e Mitigações
 
-| Risco | Impacto | Mitigação |
-|-------|---------|-----------|
-| Quill v2 incompatível com `quill-image-resize-module` | Imagens sem resize no Quill | Implementar resize via CSS `resize: both` ou drag handles customizados |
-| `ReactNodeViewRenderer` do Tiptap pode ter limitações com `atom: true` | Merge field não seleciona/deleta corretamente | Testar com `draggable: true` + `selectable: true`, fallback para `renderHTML` puro sem React |
-| `break-after: page` pode não ser respeitado pelo html2pdf.js em todos os casos | Page break não funciona no PDF | Testar com `pagebreak` option do html2pdf.js (`mode: ['avoid-all', 'css', 'legacy']`), adicionar fallback com `html2canvas` pagebreak config |
-| Base64 de imagens grandes pode impactar performance do editor e PDF | Editor lento com muitas imagens | Limitar tamanho do upload (ex: max 5MB), comprimir via canvas antes de converter para base64 |
-| `importDOM` do Lexical pode não reconhecer badges do template HTML | Merge fields não aparecem como nodes visuais | Testar importação com `$generateNodesFromDOM`, adicionar fallback regex para converter badges |
+| Risco                                                                          | Impacto                                       | Mitigação                                                                                                                                    |
+| ------------------------------------------------------------------------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Quill v2 incompatível com `quill-image-resize-module`                          | Imagens sem resize no Quill                   | Implementar resize via CSS `resize: both` ou drag handles customizados                                                                       |
+| `ReactNodeViewRenderer` do Tiptap pode ter limitações com `atom: true`         | Merge field não seleciona/deleta corretamente | Testar com `draggable: true` + `selectable: true`, fallback para `renderHTML` puro sem React                                                 |
+| `break-after: page` pode não ser respeitado pelo html2pdf.js em todos os casos | Page break não funciona no PDF                | Testar com `pagebreak` option do html2pdf.js (`mode: ['avoid-all', 'css', 'legacy']`), adicionar fallback com `html2canvas` pagebreak config |
+| Base64 de imagens grandes pode impactar performance do editor e PDF            | Editor lento com muitas imagens               | Limitar tamanho do upload (ex: max 5MB), comprimir via canvas antes de converter para base64                                                 |
+| `importDOM` do Lexical pode não reconhecer badges do template HTML             | Merge fields não aparecem como nodes visuais  | Testar importação com `$generateNodesFromDOM`, adicionar fallback regex para converter badges                                                |
 
 ---
 
@@ -524,16 +540,16 @@ src/index.css                          # + estilos merge-field-badge, page-break
 
 ## Histórico de versões
 
-| Versão | Data | Autor | Alteração |
-|--------|------|-------|-----------|
-| 1.0 | 2026-04-09 | AI Agent | Documento criado com plano de 14 steps em 4 fases (AWAITING APPROVAL) |
-| 1.1 | 2026-04-09 | AI Agent | Fase 1 concluída — Tiptap: MergeField, PageBreak, ResizableImage extensions + CSS compartilhado + MergeFieldDropdown + FieldsPanel badge-aware + templateConfig |
-| 1.2 | 2026-04-09 | AI Agent | Fase 2 concluída — Lexical: MergeFieldNode, PageBreakNode, ImageNode (DecoratorNodes) + CustomNodesPlugin + toolbar |
-| 1.3 | 2026-04-09 | AI Agent | Fase 3 concluída — Quill: MergeFieldBlot, PageBreakBlot, image upload handler override + custom toolbar |
-| 1.4 | 2026-04-09 | AI Agent | Bug fix: FieldsPanel `replaceMergeFields` — regex substituída por DOMParser para compatibilidade com inner HTML do Quill Embed (zero-width spaces + nested spans) |
-| 1.5 | 2026-04-09 | AI Agent | Bug fix: ResizableImageBlot criado para Quill — sobrescreve blot `image` nativo com container `.editor-image-container` + drag handle de resize com aspect ratio lock |
-| 1.6 | 2026-04-09 | AI Agent | Bug fix: Preview CSS — `.pdf-preview-page .page-break` desativa `break-after` em tela, mantém visual de separador |
-| 1.7 | 2026-04-09 | AI Agent | Bug fix: PDF export — page break invisível no PDF final via swap in-place (`.page-break` → marker `.html2pdf-page-break-after` invisível) + config `pagebreak.after` no html2pdf.js |
-| 1.8 | 2026-04-09 | AI Agent | Bug fix: PDF em branco — removida abordagem de clone off-screen (html2canvas precisa de elemento visível); swap in-place com restore no `finally` |
-| 1.9 | 2026-04-09 | AI Agent | Bug fix: Container PDF visível na sidebar após export — `handleExportPdf` agora preserva `position: absolute; left: -9999px` no `cssText` e limpa `innerHTML` após export |
-| 2.0 | 2026-04-09 | AI Agent | Fase 4 concluída — Validation checklist 100% ✅, status atualizado para DONE, `ResizableImageBlot.ts` adicionado à estrutura de arquivos |
+| Versão | Data       | Autor    | Alteração                                                                                                                                                                           |
+| ------ | ---------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0    | 2026-04-09 | AI Agent | Documento criado com plano de 14 steps em 4 fases (AWAITING APPROVAL)                                                                                                               |
+| 1.1    | 2026-04-09 | AI Agent | Fase 1 concluída — Tiptap: MergeField, PageBreak, ResizableImage extensions + CSS compartilhado + MergeFieldDropdown + FieldsPanel badge-aware + templateConfig                     |
+| 1.2    | 2026-04-09 | AI Agent | Fase 2 concluída — Lexical: MergeFieldNode, PageBreakNode, ImageNode (DecoratorNodes) + CustomNodesPlugin + toolbar                                                                 |
+| 1.3    | 2026-04-09 | AI Agent | Fase 3 concluída — Quill: MergeFieldBlot, PageBreakBlot, image upload handler override + custom toolbar                                                                             |
+| 1.4    | 2026-04-09 | AI Agent | Bug fix: FieldsPanel `replaceMergeFields` — regex substituída por DOMParser para compatibilidade com inner HTML do Quill Embed (zero-width spaces + nested spans)                   |
+| 1.5    | 2026-04-09 | AI Agent | Bug fix: ResizableImageBlot criado para Quill — sobrescreve blot `image` nativo com container `.editor-image-container` + drag handle de resize com aspect ratio lock               |
+| 1.6    | 2026-04-09 | AI Agent | Bug fix: Preview CSS — `.pdf-preview-page .page-break` desativa `break-after` em tela, mantém visual de separador                                                                   |
+| 1.7    | 2026-04-09 | AI Agent | Bug fix: PDF export — page break invisível no PDF final via swap in-place (`.page-break` → marker `.html2pdf-page-break-after` invisível) + config `pagebreak.after` no html2pdf.js |
+| 1.8    | 2026-04-09 | AI Agent | Bug fix: PDF em branco — removida abordagem de clone off-screen (html2canvas precisa de elemento visível); swap in-place com restore no `finally`                                   |
+| 1.9    | 2026-04-09 | AI Agent | Bug fix: Container PDF visível na sidebar após export — `handleExportPdf` agora preserva `position: absolute; left: -9999px` no `cssText` e limpa `innerHTML` após export           |
+| 2.0    | 2026-04-09 | AI Agent | Fase 4 concluída — Validation checklist 100% ✅, status atualizado para DONE, `ResizableImageBlot.ts` adicionado à estrutura de arquivos                                            |

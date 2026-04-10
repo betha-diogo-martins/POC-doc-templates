@@ -35,13 +35,13 @@ Validação prática de extensibilidade nos 3 editores free, implementando:
 
 #### Abordagem por editor
 
-| Feature          | Tiptap                                  | Lexical                             | Quill                             |
-| ---------------- | --------------------------------------- | ----------------------------------- | --------------------------------- |
-| Indentação       | Custom extension (`IndentExtension`)    | Nativo (`INDENT_CONTENT_COMMAND`)   | Nativo (`indent` format)          |
-| Line-height      | Custom extension (`LineHeightExtension`)| DOM style via `applyBlockStyle()`   | Parchment `StyleAttributor`       |
-| Spacing          | Custom extension (`ParagraphSpacing`)   | DOM style via `applyBlockStyle()`   | Parchment `StyleAttributor`       |
-| Preview PDF      | Compartilhado (`PdfPreview.tsx`)        | Compartilhado (`PdfPreview.tsx`)    | Compartilhado (`PdfPreview.tsx`)  |
-| Spellcheck       | `editorProps.attributes`                | `ContentEditable` props             | Container `lang` attribute        |
+| Feature     | Tiptap                                   | Lexical                           | Quill                            |
+| ----------- | ---------------------------------------- | --------------------------------- | -------------------------------- |
+| Indentação  | Custom extension (`IndentExtension`)     | Nativo (`INDENT_CONTENT_COMMAND`) | Nativo (`indent` format)         |
+| Line-height | Custom extension (`LineHeightExtension`) | DOM style via `applyBlockStyle()` | Parchment `StyleAttributor`      |
+| Spacing     | Custom extension (`ParagraphSpacing`)    | DOM style via `applyBlockStyle()` | Parchment `StyleAttributor`      |
+| Preview PDF | Compartilhado (`PdfPreview.tsx`)         | Compartilhado (`PdfPreview.tsx`)  | Compartilhado (`PdfPreview.tsx`) |
+| Spellcheck  | `editorProps.attributes`                 | `ContentEditable` props           | Container `lang` attribute       |
 
 ## Stack
 

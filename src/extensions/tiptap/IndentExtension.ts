@@ -27,7 +27,13 @@ export const Indent = Extension.create<IndentOptions>({
 
   addOptions() {
     return {
-      types: ["paragraph", "heading", "bulletList", "orderedList", "blockquote"],
+      types: [
+        "paragraph",
+        "heading",
+        "bulletList",
+        "orderedList",
+        "blockquote",
+      ],
       minLevel: 0,
       maxLevel: 5,
       step: 2,

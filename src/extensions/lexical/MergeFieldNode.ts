@@ -128,8 +128,7 @@ function convertMergeFieldElement(
   domNode: HTMLElement,
 ): DOMConversionOutput | null {
   const fieldId = domNode.getAttribute("data-field-id");
-  const label =
-    domNode.getAttribute("data-label") ?? fieldId ?? "campo";
+  const label = domNode.getAttribute("data-label") ?? fieldId ?? "campo";
   if (!fieldId) return null;
   return { node: $createMergeFieldNode(fieldId, label) };
 }

@@ -119,7 +119,10 @@ export default function FieldsPanel({
     `;
 
     try {
-      await exportWithHtml2Pdf(pdfContainerRef.current, "documento-template.pdf");
+      await exportWithHtml2Pdf(
+        pdfContainerRef.current,
+        "documento-template.pdf",
+      );
     } finally {
       // Clear the container content after export to avoid leftover rendering
       pdfContainerRef.current.innerHTML = "";

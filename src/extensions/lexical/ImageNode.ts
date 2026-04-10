@@ -85,12 +85,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 
   // ── Serialization ────────────────────────────────────────────────────
   static importJSON(json: SerializedImageNode): ImageNode {
-    return $createImageNode(
-      json.src,
-      json.altText,
-      json.width,
-      json.height,
-    );
+    return $createImageNode(json.src, json.altText, json.width, json.height);
   }
 
   exportJSON(): SerializedImageNode {
@@ -176,6 +171,8 @@ export function $createImageNode(
   return $applyNodeReplacement(new ImageNode(src, altText, width, height));
 }
 
-export function $isImageNode(node: LexicalNode | null | undefined): node is ImageNode {
+export function $isImageNode(
+  node: LexicalNode | null | undefined,
+): node is ImageNode {
   return node instanceof ImageNode;
 }

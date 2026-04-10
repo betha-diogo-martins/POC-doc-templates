@@ -6,7 +6,9 @@
 
 import { Quill } from "react-quill-new";
 
-const InlineEmbed = Quill.import("blots/embed") as typeof import("parchment").EmbedBlot;
+const InlineEmbed = Quill.import(
+  "blots/embed",
+) as typeof import("parchment").EmbedBlot;
 
 export interface MergeFieldValue {
   fieldId: string;

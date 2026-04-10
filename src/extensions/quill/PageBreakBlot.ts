@@ -6,7 +6,9 @@
 
 import { Quill } from "react-quill-new";
 
-const BlockEmbed = Quill.import("blots/block/embed") as typeof import("parchment").EmbedBlot;
+const BlockEmbed = Quill.import(
+  "blots/block/embed",
+) as typeof import("parchment").EmbedBlot;
 
 class PageBreakBlot extends BlockEmbed {
   static override blotName = "page-break";
