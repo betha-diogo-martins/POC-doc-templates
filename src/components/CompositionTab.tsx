@@ -148,11 +148,6 @@ export default function CompositionTab() {
     return parts.join("\n");
   };
 
-  const handlePreview = () => {
-    setPreviewHtml(getComposedHtml());
-    setIsPreviewOpen(true);
-  };
-
   const handleExportPdf = async () => {
     const html = getComposedHtml();
     if (!pdfContainerRef.current) return;
@@ -287,14 +282,6 @@ export default function CompositionTab() {
 
           {/* Actions */}
           <div className="compose-actions">
-            <button
-              className="btn btn-primary"
-              onClick={handlePreview}
-              disabled={!hasSelection}
-              type="button"
-            >
-              👁️ Preview
-            </button>
             <button
               className="btn btn-export"
               onClick={handleExportPdf}
