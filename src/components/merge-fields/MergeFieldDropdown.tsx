@@ -1,12 +1,13 @@
 /**
  * Shared dropdown component for inserting merge fields into any editor.
- * Displays available fields grouped by category from MERGE_FIELDS config.
+ * Displays available fields grouped by category.
+ * Consumes MergeFieldsContext to include dynamically added custom fields.
  * Editor-agnostic — receives an `onSelect` callback for insertion.
  */
 
 import { useState, useRef, useEffect } from "react";
 import { type MergeFieldDefinition } from "../../config/mergeFieldsConfig";
-import { getFieldsByGroup } from "../../utils/customMergeFields";
+import { useMergeFields } from "../../contexts/mergeFieldsContext";
 
 export interface MergeFieldDropdownProps {
   /** Called when a field is selected from the dropdown. */
@@ -18,7 +19,7 @@ export default function MergeFieldDropdown({
 }: MergeFieldDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const fieldsByGroup = getFieldsByGroup();
+  const { fieldsByGroup } = useMergeFields();
 
   // Close dropdown on outside click
   useEffect(() => {

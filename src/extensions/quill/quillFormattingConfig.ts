@@ -42,4 +42,7 @@ export const QUILL_FORMATS = [
   "image",
   "merge-field",
   "page-break",
+  "table",
+  "tr",
+  "td",
 ];

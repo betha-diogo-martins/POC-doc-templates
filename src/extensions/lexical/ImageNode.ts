@@ -37,6 +37,7 @@ export type SerializedImageNode = Spread<
     altText: string;
     width: number | null;
     height: number | null;
+    alignment: string | null;
   },
   SerializedLexicalNode
 >;
@@ -47,6 +48,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
   __altText: string;
   __width: number | null;
   __height: number | null;
+  __alignment: string | null;
 
   static getType(): string {
     return "image";
@@ -58,6 +60,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
       node.__altText,
       node.__width,
       node.__height,
+      node.__alignment,
       node.__key,
     );
   }
@@ -67,6 +70,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     altText: string,
     width?: number | null,
     height?: number | null,
+    alignment?: string | null,
     key?: NodeKey,
   ) {
     super(key);
@@ -74,6 +78,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     this.__altText = altText;
     this.__width = width ?? null;
     this.__height = height ?? null;
+    this.__alignment = alignment ?? null;
   }
 
   // ── Dimension setter (called from resize component) ──────────────────
@@ -83,9 +88,14 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     writable.__height = height;
   }
 
+  setAlignment(alignment: string | null): void {
+    const writable = this.getWritable();
+    writable.__alignment = alignment;
+  }
+
   // ── Serialization ────────────────────────────────────────────────────
   static importJSON(json: SerializedImageNode): ImageNode {
-    return $createImageNode(json.src, json.altText, json.width, json.height);
+    return $createImageNode(json.src, json.altText, json.width, json.height, json.alignment);
   }
 
   exportJSON(): SerializedImageNode {
@@ -95,6 +105,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
       altText: this.__altText,
       width: this.__width,
       height: this.__height,
+      alignment: this.__alignment,
       type: "image",
       version: 1,
     };
@@ -112,13 +123,19 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 
   // ── DOM export ───────────────────────────────────────────────────────
   exportDOM(): DOMExportOutput {
+    const wrapper = document.createElement("div");
+    if (this.__alignment) {
+      wrapper.setAttribute("data-align", this.__alignment);
+      wrapper.style.textAlign = this.__alignment;
+    }
     const img = document.createElement("img");
     img.setAttribute("src", this.__src);
     img.setAttribute("alt", this.__altText);
     if (this.__width) img.setAttribute("width", String(this.__width));
     if (this.__height) img.setAttribute("height", String(this.__height));
     img.style.maxWidth = "100%";
-    return { element: img };
+    wrapper.appendChild(img);
+    return { element: wrapper };
   }
 
   // ── DOM creation ─────────────────────────────────────────────────────
@@ -144,6 +161,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
       altText: this.__altText,
       width: this.__width,
       height: this.__height,
+      alignment: this.__alignment,
       nodeKey: this.getKey(),
     });
   }
@@ -167,8 +185,9 @@ export function $createImageNode(
   altText: string = "",
   width?: number | null,
   height?: number | null,
+  alignment?: string | null,
 ): ImageNode {
-  return $applyNodeReplacement(new ImageNode(src, altText, width, height));
+  return $applyNodeReplacement(new ImageNode(src, altText, width, height, alignment));
 }
 
 export function $isImageNode(

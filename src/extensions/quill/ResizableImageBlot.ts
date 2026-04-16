@@ -19,6 +19,7 @@ export interface ResizableImageValue {
   src: string;
   width?: number;
   height?: number;
+  alignment?: string;
 }
 
 class ResizableImageBlot extends BaseImage {
@@ -53,21 +54,33 @@ class ResizableImageBlot extends BaseImage {
       if (value.height) {
         img.setAttribute("height", String(value.height));
       }
+      if (value.alignment) {
+        wrapper.setAttribute("data-align", value.alignment);
+      }
     }
 
-    // Click → toggle selection
+    // Click → toggle selection + show alignment toolbar
     wrapper.addEventListener("click", (e) => {
       e.stopPropagation();
       document
         .querySelectorAll(".editor-image-container.selected")
         .forEach((el) => el.classList.remove("selected"));
       wrapper.classList.add("selected");
+      // Show alignment toolbar
+      let toolbar = wrapper.querySelector(".image-align-toolbar") as HTMLElement | null;
+      if (!toolbar) {
+        toolbar = ResizableImageBlot._createAlignToolbar(wrapper);
+        wrapper.appendChild(toolbar);
+      }
+      toolbar.style.display = "flex";
     });
 
     // Deselect on outside click
     const deselect = (e: MouseEvent) => {
       if (!wrapper.contains(e.target as Node)) {
         wrapper.classList.remove("selected");
+        const toolbar = wrapper.querySelector(".image-align-toolbar") as HTMLElement | null;
+        if (toolbar) toolbar.style.display = "none";
       }
     };
     document.addEventListener("click", deselect);
@@ -91,14 +104,48 @@ class ResizableImageBlot extends BaseImage {
     const src = img.getAttribute("src") ?? "";
     const width = img.getAttribute("width");
     const height = img.getAttribute("height");
-    if (width || height) {
+    const alignment = domNode.getAttribute("data-align");
+    if (width || height || alignment) {
       return {
         src,
         ...(width ? { width: Number(width) } : {}),
         ...(height ? { height: Number(height) } : {}),
+        ...(alignment ? { alignment } : {}),
       };
     }
     return src;
+  }
+
+  // ─── Alignment toolbar ──────────────────────────────────────
+
+  private static _createAlignToolbar(wrapper: HTMLElement): HTMLElement {
+    const toolbar = document.createElement("div");
+    toolbar.className = "image-align-toolbar";
+    toolbar.style.display = "none";
+
+    const alignments = [
+      { value: "left", label: "⬅", title: "Alinhar à esquerda" },
+      { value: "center", label: "⬛", title: "Centralizar" },
+      { value: "right", label: "➡", title: "Alinhar à direita" },
+    ];
+
+    for (const a of alignments) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.title = a.title;
+      btn.textContent = a.label;
+      btn.className = wrapper.getAttribute("data-align") === a.value ? "active" : "";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        wrapper.setAttribute("data-align", a.value);
+        // Update active state
+        toolbar.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+      toolbar.appendChild(btn);
+    }
+
+    return toolbar;
   }
 
   // ─── Resize logic ──────────────────────────────────────────

@@ -15,15 +15,30 @@ import {
   QUILL_FORMATS,
 } from "../extensions/quill";
 import SpacingControls from "./SpacingControls";
-import FieldsPanel from "./FieldsPanel";
 import MergeFieldDropdown from "./merge-fields/MergeFieldDropdown";
 
 /* Register Parchment Attributors (idempotent — safe at module scope). */
 registerQuillFormattingAttributors();
 
-export default function QuillTemplate() {
-  const [content, setContent] = useState(DOCUMENT_TEMPLATE_WITH_BADGES);
-  const printRef = useRef<HTMLDivElement>(null);
+/** Handle exposed by QuillTemplate to the parent (EditorShell). */
+export interface QuillTemplateHandle {
+  getEditorHtml: () => string;
+  setEditorHtml: (html: string) => void;
+}
+
+interface QuillTemplateProps {
+  printRef: React.RefObject<HTMLDivElement | null>;
+  initialContent?: string;
+  editorRef?: React.MutableRefObject<QuillTemplateHandle | null>;
+}
+
+export default function QuillTemplate({
+  printRef,
+  initialContent,
+  editorRef: externalRef,
+}: QuillTemplateProps) {
+  const contentToUse = initialContent ?? DOCUMENT_TEMPLATE_WITH_BADGES;
+  const [content, setContent] = useState(contentToUse);
   const quillRef = useRef<ReactQuill>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageHandlerRegistered = useRef(false);
@@ -39,6 +54,13 @@ export default function QuillTemplate() {
   const setEditorHtml = useCallback((html: string) => {
     setContent(html);
   }, []);
+
+  // Expose get/set methods to parent via mutable ref
+  useEffect(() => {
+    if (externalRef) {
+      externalRef.current = { getEditorHtml, setEditorHtml };
+    }
+  }, [externalRef, getEditorHtml, setEditorHtml]);
 
   const handleLineHeight = (value: string) => {
     if (!quillRef.current) return;
@@ -111,61 +133,173 @@ export default function QuillTemplate() {
   });
 
   return (
-    <div className="editor-with-panel">
-      <div className="editor-main">
-        <div className="editor-wrapper">
-          {/* Custom toolbar row — spacing + merge fields + page break */}
-          <div className="quill-custom-toolbar">
-            <SpacingControls
-              onLineHeight={handleLineHeight}
-              onSpacing={handleSpacing}
-            />
+    <div className="editor-wrapper">
+      {/* Custom toolbar row — spacing + merge fields + page break */}
+      <div className="quill-custom-toolbar">
+        <SpacingControls
+          onLineHeight={handleLineHeight}
+          onSpacing={handleSpacing}
+        />
 
-            <div className="toolbar-separator" />
+        <div className="toolbar-separator" />
 
-            <MergeFieldDropdown onSelect={handleInsertMergeField} />
+        <MergeFieldDropdown onSelect={handleInsertMergeField} />
 
-            <div className="toolbar-separator" />
+        <div className="toolbar-separator" />
 
-            <button
-              type="button"
-              className="toolbar-btn"
-              onClick={handleInsertPageBreak}
-              title="Inserir quebra de página"
-            >
-              📄 Page Break
-            </button>
-          </div>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={handleInsertPageBreak}
+          title="Inserir quebra de página"
+        >
+          📄 Page Break
+        </button>
 
-          {/* Hidden file input for image upload */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={onFileSelected}
-          />
+        <div className="toolbar-separator" />
 
-          <div ref={printRef} lang="pt-BR">
-            <ReactQuill
-              ref={quillRef}
-              theme="snow"
-              value={content}
-              onChange={setContent}
-              modules={QUILL_MODULES}
-              formats={QUILL_FORMATS}
-              className="quill-editor"
-            />
-          </div>
-        </div>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            if (!quillRef.current) return;
+            const editor = quillRef.current.getEditor();
+            const range = editor.getSelection(true);
+            const tableHtml = '<table><thead><tr><th>Col 1</th><th>Col 2</th><th>Col 3</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>';
+            editor.clipboard.dangerouslyPasteHTML(range.index, tableHtml, 'user');
+          }}
+          title="Inserir tabela"
+        >
+          📊
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            if (!quillRef.current) return;
+            const sel = window.getSelection();
+            if (!sel?.anchorNode) return;
+            const td = (sel.anchorNode as HTMLElement).closest?.('td,th') ?? (sel.anchorNode.parentElement as HTMLElement)?.closest?.('td,th');
+            if (!td) return;
+            const table = td.closest('table');
+            if (!table) return;
+            const colIndex = Array.from(td.parentElement!.children).indexOf(td);
+            table.querySelectorAll('tr').forEach(tr => {
+              const cell = document.createElement(tr.parentElement?.tagName === 'THEAD' ? 'th' : 'td');
+              cell.innerHTML = '&nbsp;';
+              const ref = tr.children[colIndex + 1];
+              if (ref) { tr.insertBefore(cell, ref); } else { tr.appendChild(cell); }
+            });
+          }}
+          title="Adicionar coluna"
+        >
+          +Col
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            if (!quillRef.current) return;
+            const sel = window.getSelection();
+            if (!sel?.anchorNode) return;
+            const td = (sel.anchorNode as HTMLElement).closest?.('td,th') ?? (sel.anchorNode.parentElement as HTMLElement)?.closest?.('td,th');
+            if (!td) return;
+            const table = td.closest('table');
+            if (!table) return;
+            const colIndex = Array.from(td.parentElement!.children).indexOf(td);
+            table.querySelectorAll('tr').forEach(tr => {
+              const cell = tr.children[colIndex];
+              if (cell) tr.removeChild(cell);
+            });
+            // Remove table if no columns left
+            if (table.querySelector('tr')?.children.length === 0) table.remove();
+          }}
+          title="Remover coluna"
+        >
+          −Col
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            if (!quillRef.current) return;
+            const sel = window.getSelection();
+            if (!sel?.anchorNode) return;
+            const td = (sel.anchorNode as HTMLElement).closest?.('td,th') ?? (sel.anchorNode.parentElement as HTMLElement)?.closest?.('td,th');
+            if (!td) return;
+            const tr = td.closest('tr');
+            if (!tr) return;
+            const cols = tr.children.length;
+            const newRow = document.createElement('tr');
+            for (let i = 0; i < cols; i++) {
+              const cell = document.createElement('td');
+              cell.innerHTML = '&nbsp;';
+              newRow.appendChild(cell);
+            }
+            tr.after(newRow);
+          }}
+          title="Adicionar linha"
+        >
+          +Row
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            if (!quillRef.current) return;
+            const sel = window.getSelection();
+            if (!sel?.anchorNode) return;
+            const td = (sel.anchorNode as HTMLElement).closest?.('td,th') ?? (sel.anchorNode.parentElement as HTMLElement)?.closest?.('td,th');
+            if (!td) return;
+            const tr = td.closest('tr');
+            if (!tr) return;
+            const table = tr.closest('table');
+            tr.remove();
+            // Remove table if no rows left
+            if (table && table.querySelectorAll('tr').length === 0) table.remove();
+          }}
+          title="Remover linha"
+        >
+          −Row
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            if (!quillRef.current) return;
+            const sel = window.getSelection();
+            if (!sel?.anchorNode) return;
+            const td = (sel.anchorNode as HTMLElement).closest?.('td,th') ?? (sel.anchorNode.parentElement as HTMLElement)?.closest?.('td,th');
+            if (!td) return;
+            const table = td.closest('table');
+            if (table) table.remove();
+          }}
+          title="Remover tabela"
+        >
+          🗑️
+        </button>
       </div>
 
-      <FieldsPanel
-        getEditorHtml={getEditorHtml}
-        setEditorHtml={setEditorHtml}
-        printRef={printRef}
-        useBadges
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={onFileSelected}
       />
+
+      <div ref={printRef} lang="pt-BR">
+        <ReactQuill
+          ref={quillRef}
+          theme="snow"
+          value={content}
+          onChange={setContent}
+          modules={QUILL_MODULES}
+          formats={QUILL_FORMATS}
+          className="quill-editor"
+        />
+      </div>
     </div>
   );
 }

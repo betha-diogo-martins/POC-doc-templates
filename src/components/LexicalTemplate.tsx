@@ -30,7 +30,7 @@ import {
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode, AutoLinkNode } from "@lexical/link";
-import { TableNode, TableCellNode, TableRowNode } from "@lexical/table";
+import { TableNode, TableCellNode, TableRowNode, $createTableNodeWithDimensions, $insertTableRow__EXPERIMENTAL, $insertTableColumn__EXPERIMENTAL, $deleteTableRow__EXPERIMENTAL, $deleteTableColumn__EXPERIMENTAL, $getTableCellNodeFromLexicalNode, $findTableNode } from "@lexical/table";
 import { $setBlocksType } from "@lexical/selection";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
 
@@ -50,8 +50,19 @@ import {
   type InsertImagePayload,
 } from "../extensions/lexical";
 import SpacingControls from "./SpacingControls";
-import FieldsPanel from "./FieldsPanel";
 import MergeFieldDropdown from "./merge-fields/MergeFieldDropdown";
+
+/** Handle exposed by LexicalTemplate to the parent (EditorShell). */
+export interface LexicalTemplateHandle {
+  getEditorHtml: () => string;
+  setEditorHtml: (html: string) => void;
+}
+
+interface LexicalTemplateProps {
+  printRef: React.RefObject<HTMLDivElement | null>;
+  initialContent?: string;
+  editorRef?: React.MutableRefObject<LexicalTemplateHandle | null>;
+}
 
 /** Theme for Lexical editor styling. */
 const LEXICAL_THEME = {
@@ -311,6 +322,80 @@ function ToolbarPlugin() {
         </button>
       </div>
 
+      <div className="toolbar-separator" />
+
+      {/* Table */}
+      <div className="toolbar-group">
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            editor.update(() => {
+              const selection = $getSelection();
+              if ($isRangeSelection(selection)) {
+                const tableNode = $createTableNodeWithDimensions(3, 3, true);
+                selection.insertNodes([tableNode]);
+              }
+            });
+          }}
+          title="Inserir tabela"
+        >
+          📊
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => editor.update(() => $insertTableColumn__EXPERIMENTAL())}
+          title="Adicionar coluna"
+        >
+          +Col
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => editor.update(() => $deleteTableColumn__EXPERIMENTAL())}
+          title="Remover coluna"
+        >
+          −Col
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => editor.update(() => $insertTableRow__EXPERIMENTAL())}
+          title="Adicionar linha"
+        >
+          +Row
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => editor.update(() => $deleteTableRow__EXPERIMENTAL())}
+          title="Remover linha"
+        >
+          −Row
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => {
+            editor.update(() => {
+              const selection = $getSelection();
+              if ($isRangeSelection(selection)) {
+                const anchor = selection.anchor.getNode();
+                const cell = $getTableCellNodeFromLexicalNode(anchor);
+                if (cell) {
+                  const table = $findTableNode(cell);
+                  if (table) table.remove();
+                }
+              }
+            });
+          }}
+          title="Remover tabela"
+        >
+          🗑️
+        </button>
+      </div>
+
       {/* Hidden file input for image upload */}
       <input
         ref={fileInputRef}
@@ -443,10 +528,15 @@ function SpacingPlugin() {
   );
 }
 
-export default function LexicalTemplate() {
-  const printRef = useRef<HTMLDivElement>(null);
+export default function LexicalTemplate({
+  printRef,
+  initialContent,
+  editorRef: externalRef,
+}: LexicalTemplateProps) {
   const getHtmlRef = useRef<(() => string) | null>(null);
   const setHtmlRef = useRef<((html: string) => void) | null>(null);
+
+  const contentToUse = initialContent ?? DOCUMENT_TEMPLATE_WITH_BADGES;
 
   const initialConfig = {
     namespace: "LexicalPOC",
@@ -477,45 +567,41 @@ export default function LexicalTemplate() {
     [],
   );
 
-  return (
-    <div className="editor-with-panel">
-      <div className="editor-main">
-        <div className="editor-wrapper">
-          <LexicalComposer initialConfig={initialConfig}>
-            <ToolbarPlugin />
-            <SpacingPlugin />
-            <div className="lexical-editor-container" ref={printRef}>
-              <RichTextPlugin
-                contentEditable={
-                  <ContentEditable
-                    className="lexical-content-editable"
-                    spellCheck={true}
-                    lang="pt-BR"
-                  />
-                }
-                ErrorBoundary={LexicalErrorBoundary}
-              />
-            </div>
-            <HistoryPlugin />
-            <ListPlugin />
-            <LinkPlugin />
-            <TablePlugin />
-            <CustomNodesPlugin />
-            <InitialContentPlugin html={DOCUMENT_TEMPLATE_WITH_BADGES} />
-            <EditorBridgePlugin
-              getHtmlRef={getHtmlRef}
-              setHtmlRef={setHtmlRef}
-            />
-          </LexicalComposer>
-        </div>
-      </div>
+  // Expose get/set methods to parent via mutable ref
+  useEffect(() => {
+    if (externalRef) {
+      externalRef.current = { getEditorHtml, setEditorHtml };
+    }
+  }, [externalRef, getEditorHtml, setEditorHtml]);
 
-      <FieldsPanel
-        getEditorHtml={getEditorHtml}
-        setEditorHtml={setEditorHtml}
-        printRef={printRef}
-        useBadges
-      />
+  return (
+    <div className="editor-wrapper">
+      <LexicalComposer initialConfig={initialConfig}>
+        <ToolbarPlugin />
+        <SpacingPlugin />
+        <div className="lexical-editor-container" ref={printRef}>
+          <RichTextPlugin
+            contentEditable={
+              <ContentEditable
+                className="lexical-content-editable"
+                spellCheck={true}
+                lang="pt-BR"
+              />
+            }
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+        </div>
+        <HistoryPlugin />
+        <ListPlugin />
+        <LinkPlugin />
+        <TablePlugin />
+        <CustomNodesPlugin />
+        <InitialContentPlugin html={contentToUse} />
+        <EditorBridgePlugin
+          getHtmlRef={getHtmlRef}
+          setHtmlRef={setHtmlRef}
+        />
+      </LexicalComposer>
     </div>
   );
 }

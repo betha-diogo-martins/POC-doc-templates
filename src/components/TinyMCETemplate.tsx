@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 
 import { getTinyMCEMergeTagsList } from "../config/mergeFieldsConfig";
@@ -6,23 +6,57 @@ import { DOCUMENT_TEMPLATE } from "../config/templateConfig";
 
 const API_KEY = import.meta.env.VITE_TINY_CLOUD_API_KEY || "";
 
+/** Handle exposed by TinyMCETemplate to the parent (EditorShell). */
+export interface TinyMCETemplateHandle {
+  getEditorHtml: () => string;
+  setEditorHtml: (html: string) => void;
+}
+
+interface TinyMCETemplateProps {
+  printRef: React.RefObject<HTMLDivElement | null>;
+  initialContent?: string;
+  editorRef?: React.MutableRefObject<TinyMCETemplateHandle | null>;
+}
+
 /**
  * TinyMCE template editor component with merge tags and PDF export.
  */
-export default function TinyMCETemplate() {
+export default function TinyMCETemplate({
+  printRef,
+  initialContent,
+  editorRef: externalRef,
+}: TinyMCETemplateProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
 
+  const contentToUse = initialContent ?? DOCUMENT_TEMPLATE;
   const mergeTagsList = getTinyMCEMergeTagsList();
 
+  // Expose get/set methods to parent via mutable ref
+  useEffect(() => {
+    if (externalRef) {
+      externalRef.current = {
+        getEditorHtml: () => editorRef.current?.getContent() ?? "",
+        setEditorHtml: (html: string) => editorRef.current?.setContent(html),
+      };
+    }
+  }, [externalRef]);
+
   return (
-    <div className="editor-wrapper">
+    <div className="editor-wrapper" ref={printRef}>
       <Editor
         apiKey={API_KEY}
         onInit={(_evt, editor) => {
           editorRef.current = editor;
+          // Re-sync the external ref now that the editor is ready
+          if (externalRef) {
+            externalRef.current = {
+              getEditorHtml: () => editor.getContent(),
+              setEditorHtml: (html: string) => editor.setContent(html),
+            };
+          }
         }}
-        initialValue={DOCUMENT_TEMPLATE}
+        initialValue={contentToUse}
         init={{
           height: 700,
           menubar: "file edit view insert format tools table help",

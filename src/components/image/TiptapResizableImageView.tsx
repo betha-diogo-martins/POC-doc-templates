@@ -18,6 +18,7 @@ export default function TiptapResizableImageView({
   // Read persisted dimensions (or fall back to natural size / auto)
   const width = node.attrs.width as number | null;
   const height = node.attrs.height as number | null;
+  const alignment = (node.attrs.alignment as string) ?? null;
   const src = node.attrs.src as string;
   const alt = (node.attrs.alt as string) ?? "";
   const title = (node.attrs.title as string) ?? "";
@@ -99,7 +100,15 @@ export default function TiptapResizableImageView({
       className={`editor-image-container${selected ? " selected" : ""}${isResizing ? " resizing" : ""}`}
       draggable={!isResizing}
       data-drag-handle=""
+      data-align={alignment || undefined}
     >
+      {selected && (
+        <div className="image-align-toolbar">
+          <button type="button" title="Alinhar à esquerda" className={alignment === "left" ? "active" : ""} onClick={() => updateAttributes({ alignment: "left" })}>⬅</button>
+          <button type="button" title="Centralizar" className={alignment === "center" ? "active" : ""} onClick={() => updateAttributes({ alignment: "center" })}>⬛</button>
+          <button type="button" title="Alinhar à direita" className={alignment === "right" ? "active" : ""} onClick={() => updateAttributes({ alignment: "right" })}>➡</button>
+        </div>
+      )}
       <img
         ref={imgRef}
         src={src}

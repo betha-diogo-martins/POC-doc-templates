@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
   Essentials,
@@ -41,13 +41,41 @@ import { DOCUMENT_TEMPLATE } from "../config/templateConfig";
 
 const LICENSE_KEY = import.meta.env.VITE_CK_EDITOR_LICENSE_KEY || "";
 
+/** Handle exposed by CKEditorTemplate to the parent (EditorShell). */
+export interface CKEditorTemplateHandle {
+  getEditorHtml: () => string;
+  setEditorHtml: (html: string) => void;
+}
+
+interface CKEditorTemplateProps {
+  printRef: React.RefObject<HTMLDivElement | null>;
+  initialContent?: string;
+  editorRef?: React.MutableRefObject<CKEditorTemplateHandle | null>;
+}
+
 /**
  * CKEditor 5 template editor component with merge fields, PDF export,
  * page break and pagination support (DecoupledEditor with manual toolbar mount).
  */
-export default function CKEditorTemplate() {
+export default function CKEditorTemplate({
+  printRef,
+  initialContent,
+  editorRef: externalRef,
+}: CKEditorTemplateProps) {
   const editorRef = useRef<DecoupledEditor | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+
+  const contentToUse = initialContent ?? DOCUMENT_TEMPLATE;
+
+  // Expose get/set methods to parent via mutable ref
+  useEffect(() => {
+    if (externalRef) {
+      externalRef.current = {
+        getEditorHtml: () => editorRef.current?.getData() ?? "",
+        setEditorHtml: (html: string) => editorRef.current?.setData(html),
+      };
+    }
+  }, [externalRef]);
 
   const mergeFieldsDefinitions = getCKEditorMergeFieldsConfig();
   const dataSets = [
@@ -63,7 +91,7 @@ export default function CKEditorTemplate() {
   return (
     <div className="editor-wrapper">
       <div ref={toolbarRef} className="ck-toolbar-container" />
-      <div className="ck-editor-body">
+      <div className="ck-editor-body" ref={printRef}>
         <CKEditor
           editor={DecoupledEditor}
           config={{
@@ -177,10 +205,17 @@ export default function CKEditorTemplate() {
                 left: "15mm",
               },
             },
-            initialData: DOCUMENT_TEMPLATE,
+            initialData: contentToUse,
           }}
           onReady={(editor) => {
             editorRef.current = editor;
+            // Re-sync the external ref now that the editor is ready
+            if (externalRef) {
+              externalRef.current = {
+                getEditorHtml: () => editor.getData(),
+                setEditorHtml: (html: string) => editor.setData(html),
+              };
+            }
             // DecoupledEditor requires manual toolbar mounting
             const toolbarElement = editor.ui.view.toolbar.element;
             if (toolbarElement && toolbarRef.current) {

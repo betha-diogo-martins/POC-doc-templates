@@ -51,7 +51,37 @@ export default function PdfPreview({
 
   const handleExportPdf = async () => {
     if (!contentRef.current) return;
-    await exportWithHtml2Pdf(contentRef.current, "documento-preview.pdf");
+
+    // Clone content into a clean off-screen container (without the preview's
+    // padding/width which would be captured by html2canvas and cause overflow)
+    const container = document.createElement("div");
+    container.innerHTML = contentRef.current.innerHTML;
+    container.style.cssText = `
+      position: absolute; left: -9999px; top: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #2c3e50; line-height: 1.6; font-size: 14px;
+      padding: 0; width: 718px; max-width: 718px;
+    `;
+    document.body.appendChild(container);
+
+    // Wait for images
+    const images = Array.from(container.querySelectorAll("img"));
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete) return resolve();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          }),
+      ),
+    );
+
+    try {
+      await exportWithHtml2Pdf(container, "documento-preview.pdf");
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
   return createPortal(

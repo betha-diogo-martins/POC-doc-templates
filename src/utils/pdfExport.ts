@@ -13,6 +13,7 @@ const DEFAULT_PDF_OPTIONS = {
     scale: 2,
     useCORS: true,
     letterRendering: true,
+    width: 718,
   },
   jsPDF: {
     unit: "mm" as const,
@@ -63,6 +64,17 @@ export async function exportWithHtml2Pdf(
     originals.push({ marker, original: pb });
   }
 
+  // Apply inline table styles so they render correctly in the off-screen container
+  for (const table of Array.from(element.querySelectorAll("table"))) {
+    (table as HTMLElement).style.cssText += "border-collapse:collapse;width:100%;margin:12px 0;";
+  }
+  for (const cell of Array.from(element.querySelectorAll("th,td"))) {
+    (cell as HTMLElement).style.cssText += "border:1px solid #ddd;padding:8px 12px;text-align:left;";
+  }
+  for (const th of Array.from(element.querySelectorAll("th"))) {
+    (th as HTMLElement).style.cssText += "background:#f8f9fa;font-weight:600;";
+  }
+
   try {
     await html2pdf().set(options).from(element).save();
   } finally {
@@ -88,8 +100,9 @@ export async function exportHtmlStringToPdf(
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #2c3e50;
     line-height: 1.6;
-    padding: 20px;
-    max-width: 800px;
+    padding: 0;
+    max-width: 718px;
+    width: 718px;
   `;
 
   document.body.appendChild(container);

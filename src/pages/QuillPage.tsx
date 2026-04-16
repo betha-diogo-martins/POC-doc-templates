@@ -1,24 +1,26 @@
-import QuillTemplate from "../components/QuillTemplate";
+import { useRef } from "react";
+import QuillTemplate, {
+  type QuillTemplateHandle,
+} from "../components/QuillTemplate";
+import EditorShell from "../components/EditorShell";
 
 /**
  * Page for testing the Quill editor (BSD 3-Clause license).
  */
 export default function QuillPage() {
+  const printRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<QuillTemplateHandle | null>(null);
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <h2>
-          Quill <span className="license-badge bsd">BSD 3-Clause</span>
-        </h2>
-        <p className="page-description">
-          Editor WYSIWYG popular e maduro (47k ⭐, via{" "}
-          <strong>react-quill-new</strong>). Toolbar nativa com formatação
-          completa, campos dinâmicos via <code>{"{{}}"}</code> placeholders com
-          replace por regex, e export PDF via <strong>html2pdf.js</strong>{" "}
-          (client-side) ou <strong>react-to-print</strong> (browser print).
-        </p>
-      </div>
-      <QuillTemplate />
-    </div>
+    <EditorShell
+      getEditorHtml={() => editorRef.current?.getEditorHtml() ?? ""}
+      setEditorHtml={(html) => editorRef.current?.setEditorHtml(html)}
+      printRef={printRef}
+      useBadges
+      editorName="Quill"
+      editorDescription="Editor WYSIWYG popular e maduro (BSD 3-Clause). Toolbar nativa com formatação completa, campos dinâmicos via {{}} placeholders, e export PDF."
+    >
+      <QuillTemplate printRef={printRef} editorRef={editorRef} />
+    </EditorShell>
   );
 }

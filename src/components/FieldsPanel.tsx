@@ -101,31 +101,36 @@ export default function FieldsPanel({
   };
 
   const handleExportPdf = async () => {
-    if (!pdfContainerRef.current) return;
-
     const html = replaceMergeFields(getEditorHtml());
+    if (!html) return;
 
-    pdfContainerRef.current.innerHTML = html;
-    // Apply font styles while keeping the container off-screen
-    pdfContainerRef.current.style.cssText = `
-      position: absolute;
-      left: -9999px;
-      top: 0;
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    container.style.cssText = `
+      position: fixed; left: 0; top: 0; z-index: -9999; opacity: 0;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #2c3e50;
-      line-height: 1.6;
-      padding: 20px;
-      max-width: 800px;
+      color: #2c3e50; line-height: 1.6; font-size: 14px;
+      padding: 0; width: 718px; max-width: 718px;
     `;
+    document.body.appendChild(container);
+
+    // Wait for all images to load before capturing
+    const images = Array.from(container.querySelectorAll("img"));
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete) return resolve();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          }),
+      ),
+    );
 
     try {
-      await exportWithHtml2Pdf(
-        pdfContainerRef.current,
-        "documento-template.pdf",
-      );
+      await exportWithHtml2Pdf(container, "documento-template.pdf");
     } finally {
-      // Clear the container content after export to avoid leftover rendering
-      pdfContainerRef.current.innerHTML = "";
+      document.body.removeChild(container);
     }
   };
 

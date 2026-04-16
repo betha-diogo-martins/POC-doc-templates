@@ -4,6 +4,7 @@ import TinyMCEPage from "./pages/TinyMCEPage";
 import TiptapPage from "./pages/TiptapPage";
 import LexicalPage from "./pages/LexicalPage";
 import QuillPage from "./pages/QuillPage";
+import TemplatesPage from "./pages/TemplatesPage";
 import "./App.css";
 
 /**
@@ -68,6 +69,18 @@ export default function App() {
               Quill
             </NavLink>
           </div>
+          <div className="nav-divider" />
+          <div className="nav-section">
+            <span className="nav-section-label">Gerenciamento</span>
+            <NavLink
+              to="/templates"
+              className={({ isActive }) =>
+                `nav-link ${isActive ? "active" : ""}`
+              }
+            >
+              📋 Templates
+            </NavLink>
+          </div>
         </nav>
       </header>
 
@@ -78,6 +91,7 @@ export default function App() {
           <Route path="/tiptap" element={<TiptapPage />} />
           <Route path="/lexical" element={<LexicalPage />} />
           <Route path="/quill" element={<QuillPage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
           <Route path="*" element={<Navigate to="/tiptap" replace />} />
         </Routes>
       </main>

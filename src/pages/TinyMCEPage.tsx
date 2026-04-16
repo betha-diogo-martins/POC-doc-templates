@@ -1,21 +1,25 @@
-import TinyMCETemplate from "../components/TinyMCETemplate";
+import { useRef } from "react";
+import TinyMCETemplate, {
+  type TinyMCETemplateHandle,
+} from "../components/TinyMCETemplate";
+import EditorShell from "../components/EditorShell";
 
 /**
  * Page for testing the TinyMCE template editor.
  */
 export default function TinyMCEPage() {
+  const printRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<TinyMCETemplateHandle | null>(null);
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <h2>TinyMCE</h2>
-        <p className="page-description">
-          Editor com <strong>Merge Tags</strong> (campos dinâmicos) e{" "}
-          <strong>Export to PDF</strong>. Use o botão <em>Merge Tags</em> na
-          toolbar ou digite <code>{"{{"}</code> para inserir campos. Os campos
-          são exibidos como tags não-editáveis no conteúdo.
-        </p>
-      </div>
-      <TinyMCETemplate />
-    </div>
+    <EditorShell
+      getEditorHtml={() => editorRef.current?.getEditorHtml() ?? ""}
+      setEditorHtml={(html) => editorRef.current?.setEditorHtml(html)}
+      printRef={printRef}
+      editorName="TinyMCE"
+      editorDescription="Editor com Merge Tags (campos dinâmicos) e Export to PDF. Use o botão Merge Tags na toolbar ou digite {{ para inserir campos."
+    >
+      <TinyMCETemplate printRef={printRef} editorRef={editorRef} />
+    </EditorShell>
   );
 }

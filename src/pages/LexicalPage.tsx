@@ -1,24 +1,26 @@
-import LexicalTemplate from "../components/LexicalTemplate";
+import { useRef } from "react";
+import LexicalTemplate, {
+  type LexicalTemplateHandle,
+} from "../components/LexicalTemplate";
+import EditorShell from "../components/EditorShell";
 
 /**
  * Page for testing the Lexical editor (MIT license, Meta).
  */
 export default function LexicalPage() {
+  const printRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<LexicalTemplateHandle | null>(null);
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <h2>
-          Lexical <span className="license-badge mit">MIT</span>
-        </h2>
-        <p className="page-description">
-          Editor extensível do <strong>Meta/Facebook</strong> (23.2k ⭐).
-          Arquitetura baseada em plugins, campos dinâmicos via{" "}
-          <code>{"{{}}"}</code> placeholders com replace por regex, e export PDF
-          via <strong>html2pdf.js</strong> (client-side) ou{" "}
-          <strong>react-to-print</strong> (browser print).
-        </p>
-      </div>
-      <LexicalTemplate />
-    </div>
+    <EditorShell
+      getEditorHtml={() => editorRef.current?.getEditorHtml() ?? ""}
+      setEditorHtml={(html) => editorRef.current?.setEditorHtml(html)}
+      printRef={printRef}
+      useBadges
+      editorName="Lexical"
+      editorDescription="Editor extensível do Meta/Facebook (MIT). Arquitetura baseada em plugins, campos dinâmicos via {{}} placeholders, e export PDF."
+    >
+      <LexicalTemplate printRef={printRef} editorRef={editorRef} />
+    </EditorShell>
   );
 }

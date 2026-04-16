@@ -9,11 +9,14 @@ import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 import { $getNodeByKey, CLICK_COMMAND, COMMAND_PRIORITY_LOW } from "lexical";
 import { $isImageNode } from "../../extensions/lexical";
 
+type ImageAlignment = "left" | "center" | "right";
+
 export interface LexicalImageComponentProps {
   src: string;
   altText: string;
   width: number | null;
   height: number | null;
+  alignment: string | null;
   nodeKey: string;
 }
 
@@ -22,6 +25,7 @@ export default function LexicalImageComponent({
   altText,
   width,
   height,
+  alignment,
   nodeKey,
 }: LexicalImageComponentProps) {
   const [editor] = useLexicalComposerContext();
@@ -29,6 +33,18 @@ export default function LexicalImageComponent({
   const [isSelected, setSelected, clearSelection] =
     useLexicalNodeSelection(nodeKey);
   const [isResizing, setIsResizing] = useState(false);
+
+  const setAlignment = useCallback(
+    (align: ImageAlignment) => {
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey);
+        if ($isImageNode(node)) {
+          node.setAlignment(align);
+        }
+      });
+    },
+    [editor, nodeKey],
+  );
 
   // Select node on click
   useEffect(() => {
@@ -97,7 +113,15 @@ export default function LexicalImageComponent({
   return (
     <div
       className={`editor-image-container${isSelected ? " selected" : ""}${isResizing ? " resizing" : ""}`}
+      data-align={alignment || undefined}
     >
+      {isSelected && (
+        <div className="image-align-toolbar">
+          <button type="button" title="Alinhar à esquerda" className={alignment === "left" ? "active" : ""} onClick={() => setAlignment("left")}>⬅</button>
+          <button type="button" title="Centralizar" className={alignment === "center" ? "active" : ""} onClick={() => setAlignment("center")}>⬛</button>
+          <button type="button" title="Alinhar à direita" className={alignment === "right" ? "active" : ""} onClick={() => setAlignment("right")}>➡</button>
+        </div>
+      )}
       <img
         ref={imgRef}
         src={src}

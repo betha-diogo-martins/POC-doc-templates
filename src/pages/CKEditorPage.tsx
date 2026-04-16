@@ -1,23 +1,25 @@
-import CKEditorTemplate from "../components/CKEditorTemplate";
+import { useRef } from "react";
+import CKEditorTemplate, {
+  type CKEditorTemplateHandle,
+} from "../components/CKEditorTemplate";
+import EditorShell from "../components/EditorShell";
 
 /**
  * Page for testing the CKEditor 5 template editor.
  */
 export default function CKEditorPage() {
+  const printRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<CKEditorTemplateHandle | null>(null);
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <h2>CKEditor 5</h2>
-        <p className="page-description">
-          Editor com <strong>Merge Fields</strong> (campos dinâmicos),{" "}
-          <strong>Export to PDF</strong>, <strong>Page Break</strong> e{" "}
-          <strong>Pagination</strong>. Use o botão <em>Page Break</em> na
-          toolbar para inserir quebras de página. A paginação mostra onde cada
-          página termina no formato A4. Use <em>Export PDF</em> para validar as
-          quebras no documento final.
-        </p>
-      </div>
-      <CKEditorTemplate />
-    </div>
+    <EditorShell
+      getEditorHtml={() => editorRef.current?.getEditorHtml() ?? ""}
+      setEditorHtml={(html) => editorRef.current?.setEditorHtml(html)}
+      printRef={printRef}
+      editorName="CKEditor 5"
+      editorDescription="Editor com Merge Fields, Export to PDF, Page Break e Pagination. Use os botões na toolbar para inserir campos e quebras de página."
+    >
+      <CKEditorTemplate printRef={printRef} editorRef={editorRef} />
+    </EditorShell>
   );
 }
