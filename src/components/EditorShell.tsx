@@ -161,20 +161,17 @@ export default function EditorShell({
 
   const handleExportPdf = async () => {
     const html = replaceMergeFields(getEditorHtml());
-    if (!html) return;
-
-    const container = document.createElement("div");
-    container.innerHTML = html;
-    container.style.cssText = `
+    if (!pdfContainerRef.current) return;
+    pdfContainerRef.current.innerHTML = html;
+    pdfContainerRef.current.style.cssText = `
       position: fixed; left: 0; top: 0; z-index: -9999; opacity: 0;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #2c3e50; line-height: 1.6; font-size: 14px;
       padding: 0; width: 718px; max-width: 718px;
     `;
-    document.body.appendChild(container);
 
     // Wait for all images to load before capturing
-    const images = Array.from(container.querySelectorAll("img"));
+    const images = Array.from(pdfContainerRef.current.querySelectorAll("img"));
     await Promise.all(
       images.map(
         (img) =>
@@ -187,9 +184,12 @@ export default function EditorShell({
     );
 
     try {
-      await exportWithHtml2Pdf(container, "documento-template.pdf");
+      await exportWithHtml2Pdf(
+        pdfContainerRef.current,
+        "documento-template.pdf",
+      );
     } finally {
-      document.body.removeChild(container);
+      pdfContainerRef.current.innerHTML = "";
     }
   };
 
@@ -236,7 +236,9 @@ export default function EditorShell({
     setDocType("body");
     resetToDefaults();
     onNew?.();
-    setEditorHtml(useBadges ? DOCUMENT_TEMPLATE_WITH_BADGES : DOCUMENT_TEMPLATE);
+    setEditorHtml(
+      useBadges ? DOCUMENT_TEMPLATE_WITH_BADGES : DOCUMENT_TEMPLATE,
+    );
   };
 
   const toggleGroup = (groupName: string) => {
@@ -382,7 +384,8 @@ export default function EditorShell({
                 className="shell-type-select"
                 value={displayType}
                 onChange={(e) => {
-                  if (!activeTemplate) setDocType(e.target.value as TemplateType);
+                  if (!activeTemplate)
+                    setDocType(e.target.value as TemplateType);
                 }}
                 disabled={!!activeTemplate}
               >
@@ -439,265 +442,262 @@ export default function EditorShell({
           {/* Editor + Sidebar */}
           <div className="shell-body">
             <MergeFieldsProvider fieldsByGroup={fieldsByGroup}>
-            <div className="shell-editor-area">{children}</div>
+              <div className="shell-editor-area">{children}</div>
 
-            {/* Dynamic Fields Sidebar */}
-            <aside className="shell-sidebar">
-              <div className="shell-sidebar-header">
-                <h3 className="shell-sidebar-title">Campos Dinâmicos</h3>
-                <button
-                  type="button"
-                  className="shell-sidebar-add-btn"
-                  onClick={() => {
-                    setIsAddingSection(true);
-                    setSectionError("");
-                  }}
-                  title="Adicionar seção"
-                >
-                  +
-                </button>
-              </div>
-
-              {/* Inline form: add section */}
-              {isAddingSection && (
-                <div className="shell-inline-form">
-                  <input
-                    type="text"
-                    className="shell-inline-input"
-                    placeholder="Nome da seção"
-                    value={newSectionName}
-                    onChange={(e) => {
-                      setNewSectionName(e.target.value);
+              {/* Dynamic Fields Sidebar */}
+              <aside className="shell-sidebar">
+                <div className="shell-sidebar-header">
+                  <h3 className="shell-sidebar-title">Campos Dinâmicos</h3>
+                  <button
+                    type="button"
+                    className="shell-sidebar-add-btn"
+                    onClick={() => {
+                      setIsAddingSection(true);
                       setSectionError("");
                     }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddSection();
-                      if (e.key === "Escape") cancelAddSection();
-                    }}
-                    autoFocus
-                  />
-                  {sectionError && (
-                    <span className="shell-inline-error">{sectionError}</span>
-                  )}
-                  <div className="shell-inline-actions">
-                    <button
-                      type="button"
-                      className="shell-inline-btn shell-inline-btn-confirm"
-                      onClick={handleAddSection}
-                    >
-                      Criar
-                    </button>
-                    <button
-                      type="button"
-                      className="shell-inline-btn shell-inline-btn-cancel"
-                      onClick={cancelAddSection}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
+                    title="Adicionar seção"
+                  >
+                    +
+                  </button>
                 </div>
-              )}
 
-              <div className="shell-sidebar-fields">
-                {Array.from(fieldsByGroup.entries()).map(
-                  ([groupName, fields]) => {
-                    const isCollapsed = collapsedGroups.has(groupName);
-                    const isCustom = isCustomGroup(groupName);
-                    return (
-                      <div key={groupName} className="shell-field-group">
-                        <div className="shell-group-header">
-                          <button
-                            type="button"
-                            className="shell-group-toggle"
-                            onClick={() => toggleGroup(groupName)}
-                          >
-                            <span
-                              className={`shell-chevron ${isCollapsed ? "collapsed" : ""}`}
+                {/* Inline form: add section */}
+                {isAddingSection && (
+                  <div className="shell-inline-form">
+                    <input
+                      type="text"
+                      className="shell-inline-input"
+                      placeholder="Nome da seção"
+                      value={newSectionName}
+                      onChange={(e) => {
+                        setNewSectionName(e.target.value);
+                        setSectionError("");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddSection();
+                        if (e.key === "Escape") cancelAddSection();
+                      }}
+                      autoFocus
+                    />
+                    {sectionError && (
+                      <span className="shell-inline-error">{sectionError}</span>
+                    )}
+                    <div className="shell-inline-actions">
+                      <button
+                        type="button"
+                        className="shell-inline-btn shell-inline-btn-confirm"
+                        onClick={handleAddSection}
+                      >
+                        Criar
+                      </button>
+                      <button
+                        type="button"
+                        className="shell-inline-btn shell-inline-btn-cancel"
+                        onClick={cancelAddSection}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="shell-sidebar-fields">
+                  {Array.from(fieldsByGroup.entries()).map(
+                    ([groupName, fields]) => {
+                      const isCollapsed = collapsedGroups.has(groupName);
+                      const isCustom = isCustomGroup(groupName);
+                      return (
+                        <div key={groupName} className="shell-field-group">
+                          <div className="shell-group-header">
+                            <button
+                              type="button"
+                              className="shell-group-toggle"
+                              onClick={() => toggleGroup(groupName)}
                             >
-                              ▾
-                            </span>
-                            <span className="shell-group-name">
-                              {groupName}
-                            </span>
-                          </button>
-                          {isCustom && (
-                            <div className="shell-group-actions">
-                              {confirmRemoveGroup === groupName ? (
-                                <span className="shell-confirm-popover">
-                                  <span className="shell-confirm-text">
-                                    Remover?
+                              <span
+                                className={`shell-chevron ${isCollapsed ? "collapsed" : ""}`}
+                              >
+                                ▾
+                              </span>
+                              <span className="shell-group-name">
+                                {groupName}
+                              </span>
+                            </button>
+                            {isCustom && (
+                              <div className="shell-group-actions">
+                                {confirmRemoveGroup === groupName ? (
+                                  <span className="shell-confirm-popover">
+                                    <span className="shell-confirm-text">
+                                      Remover?
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className="shell-confirm-yes"
+                                      onClick={() =>
+                                        handleRemoveGroup(groupName)
+                                      }
+                                    >
+                                      Sim
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="shell-confirm-no"
+                                      onClick={() =>
+                                        setConfirmRemoveGroup(null)
+                                      }
+                                    >
+                                      Não
+                                    </button>
                                   </span>
+                                ) : (
                                   <button
                                     type="button"
-                                    className="shell-confirm-yes"
+                                    className="shell-group-remove-btn"
                                     onClick={() =>
-                                      handleRemoveGroup(groupName)
+                                      setConfirmRemoveGroup(groupName)
                                     }
+                                    title="Remover seção"
                                   >
-                                    Sim
+                                    🗑️
                                   </button>
-                                  <button
-                                    type="button"
-                                    className="shell-confirm-no"
-                                    onClick={() =>
-                                      setConfirmRemoveGroup(null)
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {!isCollapsed && (
+                            <div className="shell-group-content">
+                              {fields.map((field) => (
+                                <div key={field.id} className="shell-field-row">
+                                  <div className="shell-field-header">
+                                    <span className="shell-field-label">
+                                      {field.label}
+                                    </span>
+                                    <code className="shell-field-badge">{`{{${field.id}}}`}</code>
+                                    {isCustomField(field.id) && (
+                                      <>
+                                        {confirmRemoveField === field.id ? (
+                                          <span className="shell-confirm-popover shell-confirm-popover-sm">
+                                            <button
+                                              type="button"
+                                              className="shell-confirm-yes"
+                                              onClick={() =>
+                                                handleRemoveField(field.id)
+                                              }
+                                            >
+                                              ✓
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="shell-confirm-no"
+                                              onClick={() =>
+                                                setConfirmRemoveField(null)
+                                              }
+                                            >
+                                              ✗
+                                            </button>
+                                          </span>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            className="shell-field-remove-btn"
+                                            onClick={() =>
+                                              setConfirmRemoveField(field.id)
+                                            }
+                                            title="Remover campo"
+                                          >
+                                            ✕
+                                          </button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    className="shell-field-input"
+                                    value={values[field.id] ?? ""}
+                                    onChange={(e) =>
+                                      updateField(field.id, e.target.value)
                                     }
-                                  >
-                                    Não
-                                  </button>
-                                </span>
+                                    placeholder={`Ex.: ${field.defaultValue}`}
+                                  />
+                                </div>
+                              ))}
+
+                              {/* Inline form: add field */}
+                              {addingFieldGroup === groupName ? (
+                                <div className="shell-inline-form shell-inline-form-field">
+                                  <input
+                                    type="text"
+                                    className="shell-inline-input"
+                                    placeholder="Label do campo"
+                                    value={newFieldLabel}
+                                    onChange={(e) => {
+                                      setNewFieldLabel(e.target.value);
+                                      setFieldError("");
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Escape") cancelAddField();
+                                    }}
+                                    autoFocus
+                                  />
+                                  <input
+                                    type="text"
+                                    className="shell-inline-input"
+                                    placeholder="Valor padrão (opcional)"
+                                    value={newFieldDefault}
+                                    onChange={(e) =>
+                                      setNewFieldDefault(e.target.value)
+                                    }
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter")
+                                        handleAddField(groupName);
+                                      if (e.key === "Escape") cancelAddField();
+                                    }}
+                                  />
+                                  {fieldError && (
+                                    <span className="shell-inline-error">
+                                      {fieldError}
+                                    </span>
+                                  )}
+                                  <div className="shell-inline-actions">
+                                    <button
+                                      type="button"
+                                      className="shell-inline-btn shell-inline-btn-confirm"
+                                      onClick={() => handleAddField(groupName)}
+                                    >
+                                      Adicionar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="shell-inline-btn shell-inline-btn-cancel"
+                                      onClick={cancelAddField}
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </div>
+                                </div>
                               ) : (
                                 <button
                                   type="button"
-                                  className="shell-group-remove-btn"
-                                  onClick={() =>
-                                    setConfirmRemoveGroup(groupName)
-                                  }
-                                  title="Remover seção"
+                                  className="shell-add-field-btn"
+                                  onClick={() => {
+                                    setAddingFieldGroup(groupName);
+                                    setFieldError("");
+                                    setNewFieldLabel("");
+                                    setNewFieldDefault("");
+                                  }}
                                 >
-                                  🗑️
+                                  + Campo
                                 </button>
                               )}
                             </div>
                           )}
                         </div>
-                        {!isCollapsed && (
-                          <div className="shell-group-content">
-                            {fields.map((field) => (
-                              <div
-                                key={field.id}
-                                className="shell-field-row"
-                              >
-                                <div className="shell-field-header">
-                                  <span className="shell-field-label">
-                                    {field.label}
-                                  </span>
-                                  <code className="shell-field-badge">{`{{${field.id}}}`}</code>
-                                  {isCustomField(field.id) && (
-                                    <>
-                                      {confirmRemoveField === field.id ? (
-                                        <span className="shell-confirm-popover shell-confirm-popover-sm">
-                                          <button
-                                            type="button"
-                                            className="shell-confirm-yes"
-                                            onClick={() =>
-                                              handleRemoveField(field.id)
-                                            }
-                                          >
-                                            ✓
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="shell-confirm-no"
-                                            onClick={() =>
-                                              setConfirmRemoveField(null)
-                                            }
-                                          >
-                                            ✗
-                                          </button>
-                                        </span>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="shell-field-remove-btn"
-                                          onClick={() =>
-                                            setConfirmRemoveField(field.id)
-                                          }
-                                          title="Remover campo"
-                                        >
-                                          ✕
-                                        </button>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                                <input
-                                  type="text"
-                                  className="shell-field-input"
-                                  value={values[field.id] ?? ""}
-                                  onChange={(e) =>
-                                    updateField(field.id, e.target.value)
-                                  }
-                                  placeholder={`Ex.: ${field.defaultValue}`}
-                                />
-                              </div>
-                            ))}
-
-                            {/* Inline form: add field */}
-                            {addingFieldGroup === groupName ? (
-                              <div className="shell-inline-form shell-inline-form-field">
-                                <input
-                                  type="text"
-                                  className="shell-inline-input"
-                                  placeholder="Label do campo"
-                                  value={newFieldLabel}
-                                  onChange={(e) => {
-                                    setNewFieldLabel(e.target.value);
-                                    setFieldError("");
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Escape") cancelAddField();
-                                  }}
-                                  autoFocus
-                                />
-                                <input
-                                  type="text"
-                                  className="shell-inline-input"
-                                  placeholder="Valor padrão (opcional)"
-                                  value={newFieldDefault}
-                                  onChange={(e) =>
-                                    setNewFieldDefault(e.target.value)
-                                  }
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter")
-                                      handleAddField(groupName);
-                                    if (e.key === "Escape") cancelAddField();
-                                  }}
-                                />
-                                {fieldError && (
-                                  <span className="shell-inline-error">
-                                    {fieldError}
-                                  </span>
-                                )}
-                                <div className="shell-inline-actions">
-                                  <button
-                                    type="button"
-                                    className="shell-inline-btn shell-inline-btn-confirm"
-                                    onClick={() => handleAddField(groupName)}
-                                  >
-                                    Adicionar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="shell-inline-btn shell-inline-btn-cancel"
-                                    onClick={cancelAddField}
-                                  >
-                                    Cancelar
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                className="shell-add-field-btn"
-                                onClick={() => {
-                                  setAddingFieldGroup(groupName);
-                                  setFieldError("");
-                                  setNewFieldLabel("");
-                                  setNewFieldDefault("");
-                                }}
-                              >
-                                + Campo
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  },
-                )}
-              </div>
-            </aside>
+                      );
+                    },
+                  )}
+                </div>
+              </aside>
             </MergeFieldsProvider>
           </div>
         </>

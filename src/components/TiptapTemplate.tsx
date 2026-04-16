@@ -220,27 +220,21 @@ export default function TiptapTemplate({
 
         <div className="toolbar-group">
           <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().setTextAlign("left").run()
-            }
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
             isActive={editor.isActive({ textAlign: "left" })}
             title="Alinhar esquerda"
           >
             ⬅
           </ToolbarButton>
           <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().setTextAlign("center").run()
-            }
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
             isActive={editor.isActive({ textAlign: "center" })}
             title="Centralizar"
           >
             ⬌
           </ToolbarButton>
           <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().setTextAlign("right").run()
-            }
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
             isActive={editor.isActive({ textAlign: "right" })}
             title="Alinhar direita"
           >

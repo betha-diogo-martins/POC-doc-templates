@@ -13,7 +13,6 @@ const DEFAULT_PDF_OPTIONS = {
     scale: 2,
     useCORS: true,
     letterRendering: true,
-    width: 718,
   },
   jsPDF: {
     unit: "mm" as const,
@@ -48,6 +47,13 @@ export async function exportWithHtml2Pdf(
     filename: filename ?? DEFAULT_PDF_OPTIONS.filename,
   };
 
+  // Ajuste de troubleshooting removido: manter o elemento visível para o layout engine
+  element.style.opacity = "";
+  element.style.visibility = "visible";
+  element.style.position = "static";
+  element.style.left = "";
+  element.style.top = "";
+
   // Snapshot the original page-break elements and swap them with invisible
   // markers. We keep a list of [marker, originalHtml] so we can restore later.
   const pageBreaks = Array.from(
@@ -66,10 +72,12 @@ export async function exportWithHtml2Pdf(
 
   // Apply inline table styles so they render correctly in the off-screen container
   for (const table of Array.from(element.querySelectorAll("table"))) {
-    (table as HTMLElement).style.cssText += "border-collapse:collapse;width:100%;margin:12px 0;";
+    (table as HTMLElement).style.cssText +=
+      "border-collapse:collapse;width:100%;margin:12px 0;";
   }
   for (const cell of Array.from(element.querySelectorAll("th,td"))) {
-    (cell as HTMLElement).style.cssText += "border:1px solid #ddd;padding:8px 12px;text-align:left;";
+    (cell as HTMLElement).style.cssText +=
+      "border:1px solid #ddd;padding:8px 12px;text-align:left;";
   }
   for (const th of Array.from(element.querySelectorAll("th"))) {
     (th as HTMLElement).style.cssText += "background:#f8f9fa;font-weight:600;";
